@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Shield, Gavel, Clock, Trophy, CheckCircle, XCircle, AlertTriangle, PlayCircle, BookOpen, Send, Sparkles } from 'lucide-react';
+import { Shield, Gavel, Clock, Trophy, CheckCircle, XCircle, AlertTriangle, PlayCircle, BookOpen, Sparkles, BarChart3, ArrowLeft } from 'lucide-react';
 
-// --- 資料區 (已全面拔除答案與對應標籤) ---
+// --- 資料區 (防作弊加密) ---
 const LEVEL1_QUESTIONS = [
   "合理使用就是可以隨便使用別人的作品。",
   "教學用途通常比較容易符合合理使用。",
@@ -23,6 +23,10 @@ const CC_BASE_DATA = [
   { img: 'https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nc-sa.png', name: '姓名標示-非商業性-相同方式分享', desc: '標示姓名，不可商業使用，且新作品需用相同授權。' },
   { img: 'https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nc-nd.png', name: '姓名標示-非商業性-禁止改作', desc: '最嚴格的授權。標示姓名，不可商業使用，也不可修改。' }
 ];
+
+// GAS 網址 與 Google Sheet 網址
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyva0kqJmE1E1BEwwsjARpbbrRzjmdNDEndgqq0jfYXlQc1xz4L6_oj1K3ZsnbQpzd8/exec";
+const SHEET_PREVIEW_URL = "https://docs.google.com/spreadsheets/d/1l-9wEmIvy17y7eSRwBloJgAw9JocV74eKiItzcPm9Hw/preview";
 
 export default function App() {
   const [gameState, setGameState] = useState('login'); 
@@ -61,11 +65,15 @@ export default function App() {
     </div>
   );
 
+  // --- 登入畫面 ---
   const LoginScreen = () => {
     const handleLogin = (e) => {
       e.preventDefault();
-      if (user.number && user.name) setGameState('intro');
-      else alert("請輸入座號與姓名喔！");
+      if (user.number && user.name) {
+        setScore(0);
+        setTimeElapsed(0);
+        setGameState('intro');
+      } else alert("請輸入座號與姓名喔！");
     };
 
     return (
@@ -88,15 +96,60 @@ export default function App() {
               <input type="number" placeholder="座號" required min="1" max="50" className="w-2/3 bg-slate-50 text-slate-800 p-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 border border-slate-200 font-bold placeholder-slate-400" value={user.number} onChange={(e) => setUser({...user, number: e.target.value})} />
             </div>
             <input type="text" placeholder="你的姓名" required className="w-full bg-slate-50 text-slate-800 p-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 border border-slate-200 font-bold placeholder-slate-400" value={user.name} onChange={(e) => setUser({...user, name: e.target.value})} />
+            
             <button type="submit" className="w-full bg-orange-500 hover:bg-orange-400 text-white font-black text-xl p-4 rounded-xl shadow-[0_6px_0_#c2410c] hover:shadow-[0_4px_0_#c2410c] hover:translate-y-1 transition-all mt-4 flex justify-center items-center">
               開始挑戰 🚀
             </button>
           </form>
+
+          {/* 查看紀錄按鈕 */}
+          <button 
+            type="button"
+            onClick={() => setGameState('records')}
+            className="w-full mt-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-lg p-3 rounded-xl border-2 border-slate-200 transition-all flex justify-center items-center"
+          >
+            <BarChart3 className="mr-2" size={20} /> 查看成績紀錄
+          </button>
         </div>
       </div>
     );
   };
 
+  // --- 查看成績紀錄畫面 ---
+  const RecordsScreen = () => {
+    return (
+      <div className={bgStyle}>
+        <div className="bg-white p-6 rounded-3xl shadow-2xl border-t-8 border-blue-500 w-full max-w-5xl h-[85vh] flex flex-col relative overflow-hidden">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-black text-slate-800 flex items-center">
+              <BarChart3 className="text-blue-500 mr-3" size={32} />
+              班級成績英雄榜
+            </h2>
+            <button 
+              onClick={() => setGameState('login')}
+              className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2 rounded-xl font-bold flex items-center transition-all"
+            >
+              <ArrowLeft className="mr-2" size={20} /> 返回首頁
+            </button>
+          </div>
+          
+          <div className="flex-1 bg-slate-100 rounded-2xl border-4 border-slate-200 overflow-hidden relative">
+            {/* 嵌入 Google Sheet 預覽模式 */}
+            <iframe 
+              src={SHEET_PREVIEW_URL} 
+              className="w-full h-full border-none"
+              title="Google Sheet Records"
+            ></iframe>
+          </div>
+          <p className="text-center text-slate-500 text-sm mt-3 font-medium">
+            提示：可以在表格中上下滑動，尋找自己的班級與座號喔！
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  // --- 影片導覽 ---
   const IntroScreen = () => {
     return (
       <div className={bgStyle}>
@@ -104,7 +157,7 @@ export default function App() {
           <div className="bg-white p-8 rounded-3xl shadow-xl border border-blue-100 mb-6">
             <h2 className="text-3xl font-black text-blue-600 mb-4 flex items-center"><PlayCircle className="mr-3 text-orange-500" size={36}/> 任務行前說明</h2>
             <p className="text-slate-600 mb-6 text-lg font-medium leading-relaxed bg-blue-50 p-4 rounded-xl border-l-4 border-blue-400">
-              著作權保護了創作者的心血，但為了促進教育與社會發展，法律也規定了「合理使用」的例外情況。在開始挑戰前，請先觀看這段關於「創用CC」的介紹影片！
+              在開始挑戰前，請先觀看這段關於「創用CC」的介紹影片！這會幫助你通過後面的關卡喔。
             </p>
             <div className="relative pt-[56.25%] rounded-2xl overflow-hidden shadow-lg border-4 border-slate-100 bg-slate-200">
               <iframe className="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/9fuajCuCV4g" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
@@ -118,6 +171,7 @@ export default function App() {
     );
   };
 
+  // --- Level 1 ---
   const Level1 = () => {
     const [qIndex, setQIndex] = useState(0);
     const [timeLeft, setTimeLeft] = useState(60);
@@ -129,9 +183,7 @@ export default function App() {
       if (timeLeft > 0 && !isFinished) {
         const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
         return () => clearTimeout(timer);
-      } else if (timeLeft === 0 && !isFinished) {
-        handleFinish();
-      }
+      } else if (timeLeft === 0 && !isFinished) handleFinish();
     }, [timeLeft, isFinished]);
 
     const handleFinish = () => {
@@ -143,16 +195,13 @@ export default function App() {
       if (isTransitioning || feedback !== null) return;
       setIsTransitioning(true);
 
-      // 位元運算加密驗證 (學生看原始碼只會看到這些魔術數字)
       const _m = 365;
       const _e = ((_m >> (9 - qIndex)) & 1) === 1;
       
       if (answer === _e) {
         setScore(s => s + 5); 
         setFeedback('correct');
-      } else {
-        setFeedback('wrong');
-      }
+      } else setFeedback('wrong');
 
       setTimeout(() => {
         setFeedback(null);
@@ -170,7 +219,6 @@ export default function App() {
             <div className="absolute top-0 left-0 h-3 bg-slate-100 w-full">
               <div className={`h-full ${timeLeft > 20 ? 'bg-orange-400' : 'bg-red-500'}`} style={{ width: `${(timeLeft / 60) * 100}%`, transition: 'width 1s linear' }}></div>
             </div>
-
             {!isFinished ? (
               <>
                 <div className="inline-block bg-orange-100 text-orange-600 font-bold px-4 py-1 rounded-full mb-6 mx-auto">題目 {qIndex + 1} / 10</div>
@@ -199,12 +247,12 @@ export default function App() {
     );
   };
 
+  // --- Level 2 ---
   const Level2 = () => {
     const [step, setStep] = useState(0); 
     const [selections, setSelections] = useState({});
     const [isSubmitted, setIsSubmitted] = useState(false);
 
-    // 已移除明顯的(加分/扣分)提示，增加難度與防作弊
     const factors = [
       { id: 'f1', name: '① 使用目的', options: ['教學或學術報告', '商業營利賺錢'] },
       { id: 'f2', name: '② 著作性質', options: ['已公開發行之著作', '未公開之原創作品'] },
@@ -217,7 +265,6 @@ export default function App() {
       if (isSubmitted) return;
       setIsSubmitted(true);
 
-      // 加密計分：選項0為正確，將選項index加總。只要正確大於等於3題(即總分<=1)即算過關給分
       const _chk = Object.values(selections).reduce((a, b) => a + b, 0);
       if (_chk <= 1) setScore(s => s + 20); 
       setStep(2);
@@ -277,8 +324,8 @@ export default function App() {
     );
   };
 
+  // --- Level 3 ---
   const Level3 = () => {
-    // 記憶體內動態生成加密ID，杜絕從HTML靜態找答案
     const [board, setBoard] = useState({ imgs: [], descs: [], vMap: {} });
     const [selectedImg, setSelectedImg] = useState(null);
     const [matches, setMatches] = useState({}); 
@@ -293,15 +340,10 @@ export default function App() {
         iArr.push({ id: iID, img: item.img, name: item.name });
         dArr.push({ id: dID, desc: item.desc });
       });
-      setBoard({ 
-        imgs: iArr.sort(() => Math.random() - 0.5), 
-        descs: dArr.sort(() => Math.random() - 0.5), 
-        vMap: map 
-      });
+      setBoard({ imgs: iArr.sort(() => Math.random() - 0.5), descs: dArr.sort(() => Math.random() - 0.5), vMap: map });
     }, []);
 
     const handleImgClick = (id) => { if (!matches[id]) setSelectedImg(id); };
-
     const handleDescClick = (descId) => {
       if (!selectedImg) return;
       if (board.vMap[selectedImg] === descId) { 
@@ -309,12 +351,8 @@ export default function App() {
         setMatches(prev => ({...prev, [selectedImg]: descId}));
         setScore(s => s + 5); 
         setSelectedImg(null);
-        if (Object.keys(matches).length + 1 === CC_BASE_DATA.length) {
-          setTimeout(() => setCompleted(true), 1000);
-        }
-      } else {
-        setSelectedImg(null);
-      }
+        if (Object.keys(matches).length + 1 === CC_BASE_DATA.length) setTimeout(() => setCompleted(true), 1000);
+      } else setSelectedImg(null);
     };
 
     return (
@@ -368,9 +406,9 @@ export default function App() {
     );
   };
 
+  // --- Level 4 ---
   const Level4 = () => {
     const [isAnswered, setIsAnswered] = useState(false);
-    
     const L4_OPTS = [
       'A. 完全合法，因為是 AI 畫的，沒有直接複製原圖。',
       'B. 有極大爭議！可能涉及重製或改作侵權，尤其是模仿特定畫風且用於商業販售。',
@@ -382,9 +420,7 @@ export default function App() {
         <div className="max-w-3xl w-full">
           <Header title="Level 4: AI 時代的新挑戰" />
           <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl text-center">
-            <div className="bg-yellow-100 w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner">
-              <AlertTriangle size={50} className="text-yellow-500" />
-            </div>
+            <div className="bg-yellow-100 w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner"><AlertTriangle size={50} className="text-yellow-500" /></div>
             <h3 className="text-3xl text-slate-800 font-black mb-6">爭議案例模擬</h3>
             <div className="bg-amber-50 p-6 rounded-2xl text-left text-slate-800 border-l-8 border-yellow-400 mb-8 shadow-sm">
               <p className="font-black text-xl mb-3 text-yellow-700">情境：</p>
@@ -398,14 +434,11 @@ export default function App() {
                   key={idx}
                   onClick={() => {
                     if (isAnswered) return;
-                    // XOR 加密：正確答案是 index 1，(1 ^ 3) === 2
                     if ((idx ^ 3) === 2) {
                       setIsAnswered(true);
                       setScore(s => s + 20); 
                       setGameState('court');
-                    } else {
-                      alert('答錯囉！這有很大的風險！');
-                    }
+                    } else alert('答錯囉！這有很大的風險！');
                   }}
                   className="w-full bg-white hover:bg-slate-50 text-slate-700 py-4 px-6 rounded-2xl border-2 border-slate-200 hover:border-blue-300 transition-all text-left font-bold text-lg focus:ring-4 focus:ring-blue-100"
                 >
@@ -419,14 +452,11 @@ export default function App() {
     );
   };
 
+  // --- 法庭關卡 ---
   const CourtGame = () => {
     const [phase, setPhase] = useState(0);
     const [isAnswered, setIsAnswered] = useState(false);
-
-    const ACTS = [
-      '無罪！這屬於合理使用。',
-      '有罪！不符合合理使用。敲槌！'
-    ];
+    const ACTS = ['無罪！這屬於合理使用。', '有罪！不符合合理使用。敲槌！'];
 
     return (
       <div className={`${bgStyle} !justify-start pt-10`}>
@@ -469,18 +499,14 @@ export default function App() {
                     <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
                       {ACTS.map((act, idx) => (
                         <button 
-                          key={idx}
-                          disabled={isAnswered}
+                          key={idx} disabled={isAnswered}
                           onClick={() => {
                             if (isAnswered) return;
-                            // 餘數加密：正確為 index 1。(1 * 7) % 5 === 2
                             if ((idx * 7) % 5 === 2) {
                               setIsAnswered(true);
                               setScore(s => s + 20); 
                               setPhase(3);
-                            } else {
-                              alert('判決錯誤！被告使用的來源為非法盜版，且嚴重取代市場，很難主張合理使用。');
-                            }
+                            } else alert('判決錯誤！被告使用的來源為非法盜版，且嚴重取代市場，很難主張合理使用。');
                           }}
                           className={`flex-1 py-4 rounded-2xl font-black text-lg transition-all ${idx === 1 ? 'bg-amber-500 hover:bg-amber-400 text-white shadow-[0_6px_0_#b45309] hover:shadow-[0_3px_0_#b45309]' : 'bg-white hover:bg-slate-100 text-slate-600 border-2 border-slate-300'}`}
                         >
@@ -514,6 +540,7 @@ export default function App() {
     );
   };
 
+  // --- 結算與上傳 GAS 畫面 ---
   const ResultScreen = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
@@ -524,17 +551,42 @@ export default function App() {
     else if (score >= 60) { rank = "守法達人 🛡️"; colorClass = "text-green-500"; bgClass = "bg-green-50 border-green-200"; }
     else { rank = "再挑戰一次吧 🥺"; colorClass = "text-red-500"; bgClass = "bg-red-50 border-red-200"; }
 
+    // 將資料送出給 Google Apps Script
     useEffect(() => {
-      const sendData = async () => {
+      const sendDataToGAS = async () => {
         setIsSaving(true);
         try {
-          await new Promise(resolve => setTimeout(resolve, 1500)); 
-          setSaveSuccess(true);
-        } catch (error) { console.error(error); } 
-        finally { setIsSaving(false); }
+          // 將資料轉成 Form Data 的 URL 參數格式，相容性最高
+          const formData = new URLSearchParams();
+          formData.append('class', user.class);
+          formData.append('number', user.number);
+          formData.append('name', user.name);
+          formData.append('score', score);
+          formData.append('time', timeElapsed);
+
+          // 呼叫 GAS
+          await fetch(GAS_URL, {
+            method: 'POST',
+            mode: 'no-cors', // 使用 no-cors 避免瀏覽器出現跨網域阻擋錯誤
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData.toString()
+          });
+
+          // 因為 no-cors 無法讀取回傳值，我們直接假設 1.5 秒後完成上傳
+          setTimeout(() => {
+            setSaveSuccess(true);
+            setIsSaving(false);
+          }, 1500);
+
+        } catch (error) { 
+          console.error("上傳成績失敗：", error);
+          setIsSaving(false); 
+        } 
       };
-      sendData(); 
-    }, []);
+      sendDataToGAS(); 
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
       <div className={bgStyle}>
@@ -549,6 +601,7 @@ export default function App() {
           <h2 className="text-xl text-slate-700 font-bold mb-8 bg-slate-50 py-2 rounded-xl inline-block px-6 border border-slate-200">
             {user.class} 班 {user.number} 號 <br/><span className="text-blue-600 text-2xl">{user.name}</span>
           </h2>
+          
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100">
               <div className="text-orange-800 font-bold mb-1">最終得分</div>
@@ -559,14 +612,21 @@ export default function App() {
               <div className="text-4xl font-black text-blue-500">{timeElapsed}s</div>
             </div>
           </div>
+          
           {isSaving ? (
             <div className="text-blue-500 flex items-center justify-center font-bold animate-pulse bg-blue-50 py-3 rounded-xl"><Clock size={24} className="mr-2" /> 成績上傳至資料庫中...</div>
           ) : saveSuccess ? (
             <div className="text-green-600 flex items-center justify-center font-black bg-green-50 py-3 rounded-xl border border-green-200"><CheckCircle size={24} className="mr-2" /> 成績已成功上傳！</div>
           ) : null}
-          <button onClick={() => window.location.reload()} className="w-full mt-8 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black py-4 rounded-2xl transition-all border-2 border-slate-300">
-            🔄 重新挑戰
-          </button>
+          
+          <div className="flex flex-col space-y-3 mt-8">
+            <button onClick={() => setGameState('records')} className="w-full bg-blue-500 hover:bg-blue-400 text-white font-black py-4 rounded-2xl transition-all shadow-[0_4px_0_#1d4ed8] hover:translate-y-1 hover:shadow-none flex justify-center items-center text-lg">
+              <BarChart3 className="mr-2" size={24} /> 查看全班排行榜
+            </button>
+            <button onClick={() => window.location.reload()} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl transition-all border-2 border-slate-300">
+              🔄 用不同座號重新挑戰
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -575,6 +635,7 @@ export default function App() {
   return (
     <div className="font-sans text-slate-800 antialiased selection:bg-orange-400 selection:text-white">
       {gameState === 'login' && <LoginScreen />}
+      {gameState === 'records' && <RecordsScreen />}
       {gameState === 'intro' && <IntroScreen />}
       {gameState === 'level1' && <Level1 />}
       {gameState === 'level2' && <Level2 />}
