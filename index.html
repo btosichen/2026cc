@@ -25,7 +25,7 @@ const CC_LICENSES = [
 ];
 
 export default function App() {
-  const [gameState, setGameState] = useState('login'); // login, intro, level1, level2, level3, level4, court, result
+  const [gameState, setGameState] = useState('login'); 
   const [user, setUser] = useState({ class: '701', number: '', name: '' });
   const [score, setScore] = useState(0);
   const [timeElapsed, setTimeElapsed] = useState(0);
@@ -152,7 +152,8 @@ export default function App() {
     const [qIndex, setQIndex] = useState(0);
     const [timeLeft, setTimeLeft] = useState(60);
     const [isFinished, setIsFinished] = useState(false);
-    const [feedback, setFeedback] = useState(null); // 'correct', 'wrong'
+    const [feedback, setFeedback] = useState(null); 
+    const [isTransitioning, setIsTransitioning] = useState(false); // 新增防連點鎖定狀態
 
     useEffect(() => {
       if (timeLeft > 0 && !isFinished) {
@@ -169,6 +170,11 @@ export default function App() {
     };
 
     const handleAnswer = (answer) => {
+      // 如果正在轉場或已經答題，直接阻擋（防止狂按加分）
+      if (isTransitioning || feedback !== null) return;
+      
+      setIsTransitioning(true); // 鎖定按鈕
+
       const isCorrect = answer === LEVEL1_QUESTIONS[qIndex].answer;
       if (isCorrect) {
         setScore(s => s + 5); 
@@ -179,6 +185,8 @@ export default function App() {
 
       setTimeout(() => {
         setFeedback(null);
+        setIsTransitioning(false); // 解除鎖定
+        
         if (qIndex < LEVEL1_QUESTIONS.length - 1) {
           setQIndex(qIndex + 1);
         } else {
@@ -213,10 +221,18 @@ export default function App() {
                   </div>
                 ) : (
                   <div className="flex justify-center space-x-8">
-                    <button onClick={() => handleAnswer(true)} className="flex items-center justify-center w-36 h-36 bg-blue-500 hover:bg-blue-400 text-white text-6xl font-black rounded-[2rem] shadow-[0_8px_0_#1d4ed8] hover:shadow-[0_4px_0_#1d4ed8] hover:translate-y-1 transition-all">
+                    <button 
+                      onClick={() => handleAnswer(true)} 
+                      disabled={isTransitioning}
+                      className="flex items-center justify-center w-36 h-36 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white text-6xl font-black rounded-[2rem] shadow-[0_8px_0_#1d4ed8] hover:shadow-[0_4px_0_#1d4ed8] hover:translate-y-1 transition-all"
+                    >
                       O
                     </button>
-                    <button onClick={() => handleAnswer(false)} className="flex items-center justify-center w-36 h-36 bg-red-500 hover:bg-red-400 text-white text-6xl font-black rounded-[2rem] shadow-[0_8px_0_#b91c1c] hover:shadow-[0_4px_0_#b91c1c] hover:translate-y-1 transition-all">
+                    <button 
+                      onClick={() => handleAnswer(false)} 
+                      disabled={isTransitioning}
+                      className="flex items-center justify-center w-36 h-36 bg-red-500 hover:bg-red-400 disabled:opacity-50 text-white text-6xl font-black rounded-[2rem] shadow-[0_8px_0_#b91c1c] hover:shadow-[0_4px_0_#b91c1c] hover:translate-y-1 transition-all"
+                    >
                       X
                     </button>
                   </div>
@@ -239,6 +255,7 @@ export default function App() {
   const Level2 = () => {
     const [step, setStep] = useState(0); 
     const [selections, setSelections] = useState({});
+    const [isSubmitted, setIsSubmitted] = useState(false); // 防連點
 
     const scenario = "小明為了做學校的專題報告，在網路上找到一張專業攝影師拍攝的「台灣黑熊」照片，他截取了照片的一小部分放在簡報中，並註明了攝影師姓名與出處。";
 
@@ -258,6 +275,9 @@ export default function App() {
         alert("請完成四個面向的判斷喔！");
         return;
       }
+      if (isSubmitted) return; // 阻擋連點
+      setIsSubmitted(true);
+
       const sum = Object.values(selections).reduce((a, b) => a + b, 0);
       if (sum > 0) {
         setScore(s => s + 20); 
@@ -311,7 +331,11 @@ export default function App() {
                     </div>
                   ))}
                 </div>
-                <button onClick={submitEvaluation} className="w-full bg-green-500 text-white font-black text-xl py-4 rounded-2xl shadow-[0_6px_0_#15803d] hover:shadow-[0_3px_0_#15803d] hover:translate-y-1 transition-all">
+                <button 
+                  onClick={submitEvaluation} 
+                  disabled={isSubmitted}
+                  className="w-full bg-green-500 hover:bg-green-400 text-white font-black text-xl py-4 rounded-2xl shadow-[0_6px_0_#15803d] hover:shadow-[0_3px_0_#15803d] disabled:opacity-50 hover:translate-y-1 transition-all"
+                >
                   提交判斷 ✔️
                 </button>
               </div>
@@ -348,7 +372,10 @@ export default function App() {
     const handleDescClick = (descId) => {
       if (selectedImg) {
         if (selectedImg === descId) { 
-          setMatches({...matches, [selectedImg]: descId});
+          // 如果已經配對過了，防止重複加分
+          if (matches[selectedImg]) return; 
+
+          setMatches(prev => ({...prev, [selectedImg]: descId}));
           setScore(s => s + 5); 
           setSelectedImg(null);
           
@@ -426,6 +453,15 @@ export default function App() {
 
   // --- Level 4: AI爭議題 ---
   const Level4 = () => {
+    const [isAnswered, setIsAnswered] = useState(false); // 防連點
+
+    const handleCorrect = () => {
+      if (isAnswered) return;
+      setIsAnswered(true);
+      setScore(s => s + 20); 
+      setGameState('court');
+    };
+
     return (
       <div className={`${bgStyle} !justify-start pt-10`}>
         <div className="max-w-3xl w-full">
@@ -448,7 +484,11 @@ export default function App() {
               <button onClick={() => { alert('答錯囉！這有很大的風險！'); }} className="w-full bg-white hover:bg-slate-50 text-slate-600 py-4 px-6 rounded-2xl border-2 border-slate-200 hover:border-slate-300 transition-all text-left font-bold text-lg">
                 A. 完全合法，因為是 AI 畫的，沒有直接複製原圖。
               </button>
-              <button onClick={() => { setScore(s => s + 20); setGameState('court'); }} className="w-full bg-white hover:bg-orange-50 text-slate-700 py-4 px-6 rounded-2xl border-2 border-slate-200 hover:border-orange-400 transition-all text-left font-black text-lg focus:ring-4 focus:ring-orange-200">
+              <button 
+                onClick={handleCorrect} 
+                disabled={isAnswered}
+                className="w-full bg-white hover:bg-orange-50 text-slate-700 py-4 px-6 rounded-2xl border-2 border-slate-200 hover:border-orange-400 transition-all text-left font-black text-lg focus:ring-4 focus:ring-orange-200"
+              >
                 B. 有極大爭議！可能涉及重製或改作侵權，尤其是模仿特定畫風且用於商業販售。
               </button>
               <button onClick={() => { alert('答錯囉！AI作品不一定屬於公眾領域。'); }} className="w-full bg-white hover:bg-slate-50 text-slate-600 py-4 px-6 rounded-2xl border-2 border-slate-200 hover:border-slate-300 transition-all text-left font-bold text-lg">
@@ -464,6 +504,14 @@ export default function App() {
   // --- Court Game: 法庭模擬 ---
   const CourtGame = () => {
     const [phase, setPhase] = useState(0);
+    const [isAnswered, setIsAnswered] = useState(false); // 防連點
+
+    const handleVerdict = () => {
+      if (isAnswered) return;
+      setIsAnswered(true);
+      setScore(s => s + 20); 
+      setPhase(3);
+    };
 
     return (
       <div className={`${bgStyle} !justify-start pt-10`}>
@@ -522,7 +570,11 @@ export default function App() {
                       <button onClick={() => { alert('判決錯誤！被告使用的來源為非法盜版，且嚴重取代市場，很難主張合理使用。'); }} className="flex-1 bg-white hover:bg-slate-100 text-slate-600 border-2 border-slate-300 py-4 rounded-2xl font-black text-lg transition-all">
                         無罪！這屬於合理使用。
                       </button>
-                      <button onClick={() => { setScore(s => s + 20); setPhase(3); }} className="flex-1 bg-amber-500 hover:bg-amber-400 text-white py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#b45309] hover:shadow-[0_3px_0_#b45309] hover:translate-y-1 transition-all">
+                      <button 
+                        onClick={handleVerdict} 
+                        disabled={isAnswered}
+                        className="flex-1 bg-amber-500 hover:bg-amber-400 text-white py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#b45309] hover:shadow-[0_3px_0_#b45309] disabled:opacity-50 hover:translate-y-1 transition-all"
+                      >
                         有罪！不符合合理使用。敲槌！
                       </button>
                     </div>
@@ -572,17 +624,7 @@ export default function App() {
     // 模擬傳送資料到 Google Apps Script
     const sendData = async () => {
       setIsSaving(true);
-      const GAS_URL = "https://script.google.com/macros/s/AKfycbx_YOUR_SCRIPT_ID_HERE/exec"; 
       
-      const payload = {
-        class: user.class,
-        number: user.number,
-        name: user.name,
-        score: score,
-        time: timeElapsed,
-        rank: rank
-      };
-
       try {
         await new Promise(resolve => setTimeout(resolve, 1500)); 
         // fetch 串接處...
@@ -646,7 +688,6 @@ export default function App() {
     );
   };
 
-  // --- 主流程控制 ---
   return (
     <div className="font-sans text-slate-800 antialiased selection:bg-orange-400 selection:text-white">
       {gameState === 'login' && <LoginScreen />}
