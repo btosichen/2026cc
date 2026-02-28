@@ -3,304 +3,161 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>著作合理使用挑戰賽</title>
-
+<title>著作合理使用挑戰賽 V3</title>
 <script src="https://cdn.tailwindcss.com"></script>
-
+<style>
+.fade{animation:fade .5s ease}
+@keyframes fade{from{opacity:0;transform:translateY(20px)}to{opacity:1}}
+.locked{pointer-events:none;opacity:.6}
+.btn-press{transition:all .15s}
+.btn-press:active{transform:translateY(3px) scale(.98)}
+img.cc-icon{height:80px;object-fit:contain;margin:0 auto;}
+</style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-100 to-purple-100 font-sans text-slate-800">
-
+<body class="min-h-screen bg-gradient-to-br from-indigo-100 via-sky-100 to-purple-200">
 <div id="app"></div>
 
 <script>
+// ===== 全域設定 =====
+const GAS_URL="https://script.google.com/macros/s/AKfycbyva0kqJmE1E1BEwwsjARpbbrRzjmdNDEndgqq0jfYXlQc1xz4L6_oj1K3ZsnbQpzd8/exec";
+let score=0,time=0,index=0,locked=false,timer=null;
 
-/* =========================
-   全域狀態管理
-========================= */
-let gameState = "login";
-let user = { class: "701", number: "", name: "" };
-let score = 0;
-let timeElapsed = 0;
-let globalTimer = null;
-
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyva0kqJmE1E1BEwwsjARpbbrRzjmdNDEndgqq0jfYXlQc1xz4L6_oj1K3ZsnbQpzd8/exec";
-const SHEET_PREVIEW_URL = "https://docs.google.com/spreadsheets/d/1l-9wEmIvy17y7eSRwBloJgAw9JocV74eKiItzcPm9Hw/preview";
-
-const LEVEL1_QUESTIONS = [
-"合理使用就是可以隨便使用別人的作品。",
-"教學用途通常比較容易符合合理使用。",
-"只要沒有收錢，就一定合理。",
-"整本書掃描傳給朋友通常不算合理使用。",
-"合理使用必須考慮對市場的影響。",
-"網路上的圖片都可以自由使用。",
-"CC授權一旦公開就不能撤回。",
-"CC0作品可以商業使用。",
-"引用全部內容通常符合合理使用。",
-"模仿動畫風格可能會有著作權爭議。"
+// ===== 題庫（加密答案 + 半加密） =====
+const QUESTIONS=[
+  // Level1 基礎合理使用
+  {q:"轉發盜版影片給同學，但沒收錢",a:"MQ=="},
+  {q:"引用文章摘要並標示出處",a:"MA=="},
+  {q:"整本書掃描傳給朋友",a:"MQ=="},
+  {q:"教學報告僅使用部分圖片並註明來源",a:"MA=="},
+  {q:"把他人Instagram貼文直接轉貼到網站",a:"MQ=="},
+  
+  // 創用CC圖示識別
+  {q:"以下哪一個是「姓名標示 (BY)」授權？<br><img class='cc-icon' src='https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by.png'>",a:"MA=="},
+  {q:"這是哪種授權？<br><img class='cc-icon' src='https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nc.png'>",a:"MQ=="},
+  {q:"這是哪種授權？<br><img class='cc-icon' src='https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-sa.png'>",a:"MA=="},
+  {q:"哪個圖示「禁止改作」？<br><img class='cc-icon' src='https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nd.png'>",a:"MQ=="},
+  
+  // Level2 合理使用判斷
+  {q:"翻譯未公開作品並上網發布",a:"MQ=="},
+  {q:"寫觀後感公開發表並加註影片名稱",a:"MA=="},
+  {q:"掃描小說PDF給同學練習",a:"MQ=="},
+  {q:"上課評論電影劇情重點",a:"MA=="},
+  
+  // Level3 授權組合理解
+  {q:"BY-NC 代表可修改 & 可商業使用？",a:"MQ=="},
+  {q:"PD Mark 公眾領域授權意味著？",a:"MA=="},
+  {q:"BY-NC-SA 必須相同方式分享？",a:"MA=="},
+  {q:"BY-NC-ND 可商業 & 禁止改作？",a:"MQ=="},
+  
+  // Level4 AI & 著作權爭議
+  {q:"AI 模仿特定風格用於馬克杯販售",a:"MQ=="},
+  {q:"AI 生成圖必定沒有著作權問題",a:"MQ=="},
 ];
 
-/* =========================
-   基本工具
-========================= */
-
-function render(html){
-  document.getElementById("app").innerHTML = html;
+// ===== 解密函式 =====
+function decode(s){
+  return atob(s)==="0";
 }
 
-function startTimer(){
-  globalTimer = setInterval(()=>{
-    timeElapsed++;
-    const t = document.getElementById("globalTime");
-    if(t) t.innerText = timeElapsed + " 秒";
-  },1000);
-}
+// ===== 畫面渲染 =====
+function render(html){document.getElementById("app").innerHTML=html;}
 
-function stopTimer(){
-  clearInterval(globalTimer);
-}
-
-/* =========================
-   Header
-========================= */
-
-function header(title){
-return `
-<div class="flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-md">
-  <div class="text-blue-600 font-extrabold text-xl">${title}</div>
-  <div class="flex gap-6 font-bold">
-    <div>⏱ <span id="globalTime">${timeElapsed} 秒</span></div>
-    <div>🏆 ${score} 分</div>
-  </div>
-</div>
-`;
-}
-
-/* =========================
-   Login
-========================= */
-
-function showLogin(){
+// ===== 開始頁 =====
+function showHome(){
 render(`
-<div class="flex items-center justify-center min-h-screen">
-  <div class="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center">
-    <h1 class="text-3xl font-black mb-6 text-orange-500">著作合理使用挑戰賽</h1>
-    <div class="space-y-4">
-      <select id="classSelect" class="w-full p-3 border rounded-xl">
-        ${[...Array(10)].map((_,i)=>`<option value="70${i+1}">70${i+1}</option>`).join("")}
-      </select>
-      <input id="numberInput" type="number" placeholder="座號" class="w-full p-3 border rounded-xl">
-      <input id="nameInput" type="text" placeholder="姓名" class="w-full p-3 border rounded-xl">
-      <button onclick="login()" class="w-full bg-orange-500 text-white p-3 rounded-xl font-bold">開始挑戰</button>
-      <button onclick="showRecords()" class="w-full bg-blue-500 text-white p-3 rounded-xl font-bold">查看排行榜</button>
-    </div>
+<div class="flex items-center justify-center min-h-screen fade">
+  <div class="bg-white p-8 rounded-3xl shadow-xl text-center w-96">
+    <h1 class="text-3xl font-black text-indigo-600 mb-4">著作合理使用挑戰賽</h1>
+    <iframe class="w-full aspect-video mb-4" src="https://www.youtube.com/embed/9fuajCuCV4g"></iframe>
+    <button onclick="startQuiz()" class="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold btn-press">開始挑戰 🚀</button>
   </div>
 </div>
 `);
 }
 
-function login(){
-user.class = document.getElementById("classSelect").value;
-user.number = document.getElementById("numberInput").value;
-user.name = document.getElementById("nameInput").value;
-
-if(!user.number || !user.name){
-  alert("請輸入座號與姓名");
-  return;
+// ===== 題目頁 =====
+function showQuestion(){
+if(index>=QUESTIONS.length){
+  return finish();
 }
 
-score = 0;
-timeElapsed = 0;
-gameState = "intro";
-showIntro();
-}
+locked=false;
+let data=QUESTIONS[index];
 
-/* =========================
-   Intro
-========================= */
-
-function showIntro(){
 render(`
-<div class="p-8">
-${header("任務說明")}
-<div class="bg-white p-6 rounded-2xl shadow">
-  <p class="mb-6">請先觀看影片，再進入關卡</p>
-  <div class="aspect-video mb-6">
-    <iframe class="w-full h-full" src="https://www.youtube.com/embed/9fuajCuCV4g"></iframe>
+<div class="p-8 fade">
+<div class="bg-white p-6 rounded-2xl shadow-xl">
+  <div class="flex justify-between mb-4 text-lg font-bold">
+    <div>⏱ <span id="t">${time}</span>s</div>
+    <div>🏆 ${score}</div>
   </div>
-  <button onclick="startGame()" class="w-full bg-blue-500 text-white p-4 rounded-xl font-bold">進入 Level 1</button>
-</div>
-</div>
-`);
-}
-
-function startGame(){
-startTimer();
-showLevel1();
-}
-
-/* =========================
-   Level 1
-========================= */
-
-let qIndex = 0;
-
-function showLevel1(){
-render(`
-<div class="p-8">
-${header("Level 1 快問快答")}
-<div class="bg-white p-6 rounded-2xl text-center shadow">
-  <div class="mb-6 text-xl font-bold">${LEVEL1_QUESTIONS[qIndex]}</div>
+  <h2 class="text-xl mb-6">${data.q}</h2>
   <div class="flex justify-center gap-6">
-    <button onclick="answer(true)" class="bg-blue-500 text-white px-8 py-4 rounded-xl text-2xl">O</button>
-    <button onclick="answer(false)" class="bg-red-500 text-white px-8 py-4 rounded-xl text-2xl">X</button>
+    <button onclick="answer(true)" class="bg-blue-500 text-white px-8 py-3 rounded-xl btn-press">符合</button>
+    <button onclick="answer(false)" class="bg-red-500 text-white px-8 py-3 rounded-xl btn-press">不符合</button>
   </div>
 </div>
 </div>
 `);
 }
 
-function answer(ans){
-const _m = 365;
-const _e = ((_m >> (9 - qIndex)) & 1) === 1;
+// ===== 作答處理 =====
+function answer(val){
+  if(locked)return;
+  locked=true;
 
-if(ans === _e){
-  score += 5;
+  let correct = decode(QUESTIONS[index].a);
+
+  if(val===correct){
+    score += 5;
+  }
+  index++;
+  setTimeout(showQuestion,900);
 }
 
-qIndex++;
-
-if(qIndex < LEVEL1_QUESTIONS.length){
-  showLevel1();
-}else{
-  showLevel2();
-}
-}
-
-/* =========================
-   Level 2
-========================= */
-
-function showLevel2(){
-render(`
-<div class="p-8">
-${header("Level 2 四大原則")}
-<div class="bg-white p-6 rounded-2xl shadow text-center">
-  <p class="mb-6">小明做報告截圖一小部分並標示作者</p>
-  <button onclick="score+=20;showLevel3();" class="bg-green-500 text-white px-8 py-4 rounded-xl font-bold">判定合理使用</button>
-</div>
-</div>
-`);
-}
-
-/* =========================
-   Level 3
-========================= */
-
-function showLevel3(){
-render(`
-<div class="p-8">
-${header("Level 3 CC授權")}
-<div class="bg-white p-6 rounded-2xl shadow text-center">
-  <p class="mb-6">CC0 可以商業使用？</p>
-  <button onclick="score+=20;showLevel4();" class="bg-blue-500 text-white px-8 py-4 rounded-xl">正確</button>
-</div>
-</div>
-`);
-}
-
-/* =========================
-   Level 4
-========================= */
-
-function showLevel4(){
-render(`
-<div class="p-8">
-${header("Level 4 AI爭議")}
-<div class="bg-white p-6 rounded-2xl shadow text-center">
-  <p class="mb-6">AI 模仿吉卜力風格販售商品是否有風險？</p>
-  <button onclick="score+=20;showCourt();" class="bg-red-500 text-white px-8 py-4 rounded-xl">有風險</button>
-</div>
-</div>
-`);
-}
-
-/* =========================
-   Court
-========================= */
-
-function showCourt(){
-render(`
-<div class="p-8">
-${header("最終法庭")}
-<div class="bg-white p-6 rounded-2xl shadow text-center">
-  <p class="mb-6">網紅剪輯盜版電影精華盈利是否合理？</p>
-  <button onclick="score+=20;finishGame();" class="bg-orange-500 text-white px-8 py-4 rounded-xl">不合理</button>
-</div>
-</div>
-`);
-}
-
-/* =========================
-   Result + GAS
-========================= */
-
-function finishGame(){
-stopTimer();
+// ===== 結算頁 =====
+function finish(){
+clearInterval(timer);
 
 render(`
-<div class="flex items-center justify-center min-h-screen">
-  <div class="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center">
-    <h2 class="text-2xl font-black mb-4">挑戰完成！</h2>
-    <p class="mb-4">${user.class} ${user.number} ${user.name}</p>
-    <p class="text-3xl font-bold mb-4">${score} 分</p>
-    <p>${timeElapsed} 秒</p>
-    <button onclick="uploadScore()" class="mt-6 bg-blue-500 text-white p-3 rounded-xl w-full">上傳成績</button>
-    <button onclick="location.reload()" class="mt-2 bg-gray-300 p-3 rounded-xl w-full">重新挑戰</button>
+<div class="flex items-center justify-center min-h-screen fade">
+  <div class="bg-white p-8 rounded-3xl shadow-xl text-center w-96">
+    <h2 class="text-2xl font-black text-indigo-600 mb-4">完成挑戰 🎉</h2>
+    <p class="text-xl font-bold mb-2">${score} 分</p>
+    <p class="mb-4">${time} 秒</p>
+    <button onclick="upload()" class="bg-blue-500 text-white px-6 py-3 rounded-xl btn-press">上傳成績</button>
+    <p class="text-sm text-slate-600 mt-4">參考資料來源：<br>
+      <a href="https://tw.creativecommons.net/home-page/" class="underline text-blue-600">Creative Commons 台灣 官方</a>
+    </p>
   </div>
 </div>
 `);
 }
 
-async function uploadScore(){
-const formData = new URLSearchParams();
-formData.append('class', user.class);
-formData.append('number', user.number);
-formData.append('name', user.name);
-formData.append('score', score);
-formData.append('time', timeElapsed);
+// ===== 上傳 =====
+async function upload(){
+let form=new URLSearchParams();
+form.append("score",score);
+form.append("time",time);
 
 await fetch(GAS_URL,{
-method:'POST',
-mode:'no-cors',
+method:"POST",
+mode:"no-cors",
 headers:{'Content-Type':'application/x-www-form-urlencoded'},
-body:formData.toString()
+body:form.toString()
 });
-
-alert("成績已送出！");
+alert("成績已上傳！");
 }
 
-/* =========================
-   Records
-========================= */
-
-function showRecords(){
-render(`
-<div class="p-8">
-${header("排行榜")}
-<div class="bg-white p-6 rounded-2xl shadow">
-<iframe src="${SHEET_PREVIEW_URL}" class="w-full h-[600px]"></iframe>
-<button onclick="showLogin()" class="mt-4 bg-blue-500 text-white p-3 rounded-xl w-full">返回首頁</button>
-</div>
-</div>
-`);
+// ===== 計時 =====
+function startQuiz(){
+score=time=index=0;
+timer=setInterval(()=>{time++;document.getElementById("t")&&(document.getElementById("t").innerText=time)},1000);
+showQuestion();
 }
 
-/* =========================
-   初始化
-========================= */
-
-showLogin();
-
+// ===== 初始化 =====
+showHome();
 </script>
 </body>
 </html>
