@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Shield, Gavel, Clock, Trophy, CheckCircle, XCircle, AlertTriangle, PlayCircle, BookOpen, Send, Sparkles } from 'lucide-react';
 
-// --- 資料區 ---
+// --- 資料區 (已全面拔除答案與對應標籤) ---
 const LEVEL1_QUESTIONS = [
-  { id: 1, text: "合理使用就是可以隨便使用別人的作品。", answer: false },
-  { id: 2, text: "教學用途通常比較容易符合合理使用。", answer: true },
-  { id: 3, text: "只要沒有收錢，就一定合理。", answer: false },
-  { id: 4, text: "整本書掃描傳給朋友通常不算合理使用。", answer: true },
-  { id: 5, text: "合理使用必須考慮對市場的影響。", answer: true },
-  { id: 6, text: "網路上的圖片都可以自由使用。", answer: false },
-  { id: 7, text: "CC授權一旦公開就不能撤回。", answer: true },
-  { id: 8, text: "CC0作品可以商業使用。", answer: true },
-  { id: 9, text: "引用全部內容通常符合合理使用。", answer: false },
-  { id: 10, text: "模仿動畫風格可能會有著作權爭議。", answer: true }
+  "合理使用就是可以隨便使用別人的作品。",
+  "教學用途通常比較容易符合合理使用。",
+  "只要沒有收錢，就一定合理。",
+  "整本書掃描傳給朋友通常不算合理使用。",
+  "合理使用必須考慮對市場的影響。",
+  "網路上的圖片都可以自由使用。",
+  "CC授權一旦公開就不能撤回。",
+  "CC0作品可以商業使用。",
+  "引用全部內容通常符合合理使用。",
+  "模仿動畫風格可能會有著作權爭議。"
 ];
 
-const CC_LICENSES = [
-  { id: 'by', img: 'https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by.png', name: '姓名標示 (BY)', desc: '只需標示原作者姓名，即可自由使用、改作及商業利用。' },
-  { id: 'by-sa', img: 'https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-sa.png', name: '姓名標示-相同方式分享', desc: '標示姓名，可改作與商業使用，但新作品必須採用相同授權。' },
-  { id: 'by-nd', img: 'https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nd.png', name: '姓名標示-禁止改作', desc: '標示姓名，可商業使用，但絕對不能修改原作品。' },
-  { id: 'by-nc', img: 'https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nc.png', name: '姓名標示-非商業性', desc: '標示姓名，可改作，但不能用於賺錢或商業用途。' },
-  { id: 'by-nc-sa', img: 'https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nc-sa.png', name: '姓名標示-非商業性-相同方式分享', desc: '標示姓名，不可商業使用，且新作品需用相同授權。' },
-  { id: 'by-nc-nd', img: 'https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nc-nd.png', name: '姓名標示-非商業性-禁止改作', desc: '最嚴格的授權。標示姓名，不可商業使用，也不可修改。' }
+const CC_BASE_DATA = [
+  { img: 'https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by.png', name: '姓名標示 (BY)', desc: '只需標示原作者姓名，即可自由使用、改作及商業利用。' },
+  { img: 'https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-sa.png', name: '姓名標示-相同方式分享', desc: '標示姓名，可改作與商業使用，但新作品必須採用相同授權。' },
+  { img: 'https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nd.png', name: '姓名標示-禁止改作', desc: '標示姓名，可商業使用，但絕對不能修改原作品。' },
+  { img: 'https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nc.png', name: '姓名標示-非商業性', desc: '標示姓名，可改作，但不能用於賺錢或商業用途。' },
+  { img: 'https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nc-sa.png', name: '姓名標示-非商業性-相同方式分享', desc: '標示姓名，不可商業使用，且新作品需用相同授權。' },
+  { img: 'https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nc-nd.png', name: '姓名標示-非商業性-禁止改作', desc: '最嚴格的授權。標示姓名，不可商業使用，也不可修改。' }
 ];
 
 export default function App() {
@@ -31,7 +31,6 @@ export default function App() {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [globalTimerId, setGlobalTimerId] = useState(null);
 
-  // 開始全局計時
   const startGlobalTimer = () => {
     const id = setInterval(() => setTimeElapsed(prev => prev + 1), 1000);
     setGlobalTimerId(id);
@@ -41,10 +40,8 @@ export default function App() {
     if (globalTimerId) clearInterval(globalTimerId);
   };
 
-  // 共用背景樣式 (明亮漸層)
   const bgStyle = "min-h-screen bg-gradient-to-br from-cyan-50 via-blue-100 to-purple-100 p-6 flex flex-col items-center justify-center font-sans text-slate-800";
 
-  // 組件：進度條與頂部資訊 (亮色版)
   const Header = ({ title }) => (
     <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-2xl border-b-4 border-blue-200 shadow-md w-full">
       <div className="flex items-center space-x-3 text-blue-600 font-extrabold text-xl">
@@ -64,26 +61,20 @@ export default function App() {
     </div>
   );
 
-  // --- 登入畫面 ---
   const LoginScreen = () => {
     const handleLogin = (e) => {
       e.preventDefault();
-      if (user.number && user.name) {
-        setGameState('intro');
-      } else {
-        alert("請輸入座號與姓名喔！");
-      }
+      if (user.number && user.name) setGameState('intro');
+      else alert("請輸入座號與姓名喔！");
     };
 
     return (
       <div className={bgStyle}>
         <div className="bg-white p-8 rounded-3xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border-t-8 border-orange-400 max-w-md w-full text-center relative overflow-hidden">
           <Sparkles className="absolute top-4 right-4 text-yellow-300 animate-pulse" size={40} />
-          
           <div className="bg-blue-100 w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-4 shadow-inner">
             <Shield size={50} className="text-blue-500" />
           </div>
-          
           <h1 className="text-3xl font-black text-slate-800 mb-2 tracking-wide">
             <span className="text-orange-500">著作合理使用</span><br/>判斷挑戰賽
           </h1>
@@ -91,23 +82,12 @@ export default function App() {
           
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="flex space-x-4">
-              <select 
-                className="w-1/3 bg-slate-50 text-slate-800 p-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 border border-slate-200 font-bold"
-                value={user.class} onChange={(e) => setUser({...user, class: e.target.value})}
-              >
+              <select className="w-1/3 bg-slate-50 text-slate-800 p-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 border border-slate-200 font-bold" value={user.class} onChange={(e) => setUser({...user, class: e.target.value})}>
                 {[...Array(10)].map((_, i) => <option key={i} value={`70${i+1}`}>70{i+1}</option>)}
               </select>
-              <input 
-                type="number" placeholder="座號" required min="1" max="50"
-                className="w-2/3 bg-slate-50 text-slate-800 p-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 border border-slate-200 font-bold placeholder-slate-400"
-                value={user.number} onChange={(e) => setUser({...user, number: e.target.value})}
-              />
+              <input type="number" placeholder="座號" required min="1" max="50" className="w-2/3 bg-slate-50 text-slate-800 p-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 border border-slate-200 font-bold placeholder-slate-400" value={user.number} onChange={(e) => setUser({...user, number: e.target.value})} />
             </div>
-            <input 
-              type="text" placeholder="你的姓名" required
-              className="w-full bg-slate-50 text-slate-800 p-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 border border-slate-200 font-bold placeholder-slate-400"
-              value={user.name} onChange={(e) => setUser({...user, name: e.target.value})}
-            />
+            <input type="text" placeholder="你的姓名" required className="w-full bg-slate-50 text-slate-800 p-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 border border-slate-200 font-bold placeholder-slate-400" value={user.name} onChange={(e) => setUser({...user, name: e.target.value})} />
             <button type="submit" className="w-full bg-orange-500 hover:bg-orange-400 text-white font-black text-xl p-4 rounded-xl shadow-[0_6px_0_#c2410c] hover:shadow-[0_4px_0_#c2410c] hover:translate-y-1 transition-all mt-4 flex justify-center items-center">
               開始挑戰 🚀
             </button>
@@ -117,7 +97,6 @@ export default function App() {
     );
   };
 
-  // --- 影片導覽畫面 ---
   const IntroScreen = () => {
     return (
       <div className={bgStyle}>
@@ -128,18 +107,10 @@ export default function App() {
               著作權保護了創作者的心血，但為了促進教育與社會發展，法律也規定了「合理使用」的例外情況。在開始挑戰前，請先觀看這段關於「創用CC」的介紹影片！
             </p>
             <div className="relative pt-[56.25%] rounded-2xl overflow-hidden shadow-lg border-4 border-slate-100 bg-slate-200">
-              <iframe 
-                className="absolute top-0 left-0 w-full h-full"
-                src="https://www.youtube.com/embed/9fuajCuCV4g" 
-                title="YouTube video player" frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen>
-              </iframe>
+              <iframe className="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/9fuajCuCV4g" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
             </div>
           </div>
-          <button 
-            onClick={() => { startGlobalTimer(); setGameState('level1'); }}
-            className="w-full bg-blue-500 hover:bg-blue-400 text-white font-black text-2xl p-5 rounded-2xl shadow-[0_8px_0_#1d4ed8] hover:shadow-[0_4px_0_#1d4ed8] hover:translate-y-1 transition-all"
-          >
+          <button onClick={() => { startGlobalTimer(); setGameState('level1'); }} className="w-full bg-blue-500 hover:bg-blue-400 text-white font-black text-2xl p-5 rounded-2xl shadow-[0_8px_0_#1d4ed8] hover:shadow-[0_4px_0_#1d4ed8] hover:translate-y-1 transition-all">
             我準備好了，進入 Level 1！ ⚡
           </button>
         </div>
@@ -147,13 +118,12 @@ export default function App() {
     );
   };
 
-  // --- Level 1: 快問快答 ---
   const Level1 = () => {
     const [qIndex, setQIndex] = useState(0);
     const [timeLeft, setTimeLeft] = useState(60);
     const [isFinished, setIsFinished] = useState(false);
     const [feedback, setFeedback] = useState(null); 
-    const [isTransitioning, setIsTransitioning] = useState(false); // 新增防連點鎖定狀態
+    const [isTransitioning, setIsTransitioning] = useState(false);
 
     useEffect(() => {
       if (timeLeft > 0 && !isFinished) {
@@ -170,13 +140,14 @@ export default function App() {
     };
 
     const handleAnswer = (answer) => {
-      // 如果正在轉場或已經答題，直接阻擋（防止狂按加分）
       if (isTransitioning || feedback !== null) return;
-      
-      setIsTransitioning(true); // 鎖定按鈕
+      setIsTransitioning(true);
 
-      const isCorrect = answer === LEVEL1_QUESTIONS[qIndex].answer;
-      if (isCorrect) {
+      // 位元運算加密驗證 (學生看原始碼只會看到這些魔術數字)
+      const _m = 365;
+      const _e = ((_m >> (9 - qIndex)) & 1) === 1;
+      
+      if (answer === _e) {
         setScore(s => s + 5); 
         setFeedback('correct');
       } else {
@@ -185,13 +156,9 @@ export default function App() {
 
       setTimeout(() => {
         setFeedback(null);
-        setIsTransitioning(false); // 解除鎖定
-        
-        if (qIndex < LEVEL1_QUESTIONS.length - 1) {
-          setQIndex(qIndex + 1);
-        } else {
-          handleFinish();
-        }
+        setIsTransitioning(false);
+        if (qIndex < LEVEL1_QUESTIONS.length - 1) setQIndex(qIndex + 1);
+        else handleFinish();
       }, 700);
     };
 
@@ -199,42 +166,23 @@ export default function App() {
       <div className={`${bgStyle} !justify-start pt-10`}>
         <div className="max-w-3xl w-full">
           <Header title="Level 1: 觀念快問快答" />
-          
           <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl relative overflow-hidden text-center min-h-[400px] flex flex-col justify-center">
-            {/* 倒數計時條 */}
             <div className="absolute top-0 left-0 h-3 bg-slate-100 w-full">
               <div className={`h-full ${timeLeft > 20 ? 'bg-orange-400' : 'bg-red-500'}`} style={{ width: `${(timeLeft / 60) * 100}%`, transition: 'width 1s linear' }}></div>
             </div>
 
             {!isFinished ? (
               <>
-                <div className="inline-block bg-orange-100 text-orange-600 font-bold px-4 py-1 rounded-full mb-6 mx-auto">
-                  題目 {qIndex + 1} / 10
-                </div>
-                <h3 className="text-3xl text-slate-800 font-black mb-10 min-h-[80px] leading-relaxed">
-                  {LEVEL1_QUESTIONS[qIndex].text}
-                </h3>
-                
+                <div className="inline-block bg-orange-100 text-orange-600 font-bold px-4 py-1 rounded-full mb-6 mx-auto">題目 {qIndex + 1} / 10</div>
+                <h3 className="text-3xl text-slate-800 font-black mb-10 min-h-[80px] leading-relaxed">{LEVEL1_QUESTIONS[qIndex]}</h3>
                 {feedback ? (
                   <div className={`text-7xl animate-bounce flex justify-center ${feedback === 'correct' ? 'text-green-500' : 'text-red-500'}`}>
                     {feedback === 'correct' ? <CheckCircle size={100}/> : <XCircle size={100}/>}
                   </div>
                 ) : (
                   <div className="flex justify-center space-x-8">
-                    <button 
-                      onClick={() => handleAnswer(true)} 
-                      disabled={isTransitioning}
-                      className="flex items-center justify-center w-36 h-36 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white text-6xl font-black rounded-[2rem] shadow-[0_8px_0_#1d4ed8] hover:shadow-[0_4px_0_#1d4ed8] hover:translate-y-1 transition-all"
-                    >
-                      O
-                    </button>
-                    <button 
-                      onClick={() => handleAnswer(false)} 
-                      disabled={isTransitioning}
-                      className="flex items-center justify-center w-36 h-36 bg-red-500 hover:bg-red-400 disabled:opacity-50 text-white text-6xl font-black rounded-[2rem] shadow-[0_8px_0_#b91c1c] hover:shadow-[0_4px_0_#b91c1c] hover:translate-y-1 transition-all"
-                    >
-                      X
-                    </button>
+                    <button onClick={() => handleAnswer(true)} disabled={isTransitioning} className="flex items-center justify-center w-36 h-36 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white text-6xl font-black rounded-[2rem] shadow-[0_8px_0_#1d4ed8] hover:shadow-[0_4px_0_#1d4ed8] hover:translate-y-1 transition-all">O</button>
+                    <button onClick={() => handleAnswer(false)} disabled={isTransitioning} className="flex items-center justify-center w-36 h-36 bg-red-500 hover:bg-red-400 disabled:opacity-50 text-white text-6xl font-black rounded-[2rem] shadow-[0_8px_0_#b91c1c] hover:shadow-[0_4px_0_#b91c1c] hover:translate-y-1 transition-all">X</button>
                   </div>
                 )}
               </>
@@ -251,37 +199,27 @@ export default function App() {
     );
   };
 
-  // --- Level 2: 四大原則判斷 ---
   const Level2 = () => {
     const [step, setStep] = useState(0); 
     const [selections, setSelections] = useState({});
-    const [isSubmitted, setIsSubmitted] = useState(false); // 防連點
+    const [isSubmitted, setIsSubmitted] = useState(false);
 
-    const scenario = "小明為了做學校的專題報告，在網路上找到一張專業攝影師拍攝的「台灣黑熊」照片，他截取了照片的一小部分放在簡報中，並註明了攝影師姓名與出處。";
-
+    // 已移除明顯的(加分/扣分)提示，增加難度與防作弊
     const factors = [
-      { id: 'purpose', name: '① 使用目的', options: [{label: '教學/報告 (加分)', val: 1}, {label: '商業營利 (扣分)', val: -1}] },
-      { id: 'nature', name: '② 著作性質', options: [{label: '已公開發行 (加分)', val: 1}, {label: '未公開原創 (扣分)', val: -1}] },
-      { id: 'amount', name: '③ 使用分量', options: [{label: '只用一小部分 (加分)', val: 1}, {label: '幾乎全部使用 (扣分)', val: -1}] },
-      { id: 'market', name: '④ 市場影響', options: [{label: '不影響銷售 (加分)', val: 1}, {label: '取代原作品 (扣分)', val: -1}] }
+      { id: 'f1', name: '① 使用目的', options: ['教學或學術報告', '商業營利賺錢'] },
+      { id: 'f2', name: '② 著作性質', options: ['已公開發行之著作', '未公開之原創作品'] },
+      { id: 'f3', name: '③ 使用分量', options: ['僅使用一小部分', '幾乎全部完整使用'] },
+      { id: 'f4', name: '④ 市場影響', options: ['不影響原作品銷售', '可能取代原作品市場'] }
     ];
 
-    const handleSelect = (factorId, value) => {
-      setSelections({...selections, [factorId]: value});
-    };
-
     const submitEvaluation = () => {
-      if (Object.keys(selections).length < 4) {
-        alert("請完成四個面向的判斷喔！");
-        return;
-      }
-      if (isSubmitted) return; // 阻擋連點
+      if (Object.keys(selections).length < 4) return alert("請完成四個面向的判斷喔！");
+      if (isSubmitted) return;
       setIsSubmitted(true);
 
-      const sum = Object.values(selections).reduce((a, b) => a + b, 0);
-      if (sum > 0) {
-        setScore(s => s + 20); 
-      }
+      // 加密計分：選項0為正確，將選項index加總。只要正確大於等於3題(即總分<=1)即算過關給分
+      const _chk = Object.values(selections).reduce((a, b) => a + b, 0);
+      if (_chk <= 1) setScore(s => s + 20); 
       setStep(2);
     };
 
@@ -289,23 +227,17 @@ export default function App() {
       <div className={`${bgStyle} !justify-start pt-10`}>
         <div className="max-w-3xl w-full">
           <Header title="Level 2: 四大原則分析" />
-          
           <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl min-h-[400px]">
             {step === 0 && (
               <div className="text-center animate-fade-in">
-                <div className="bg-blue-100 w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner">
-                  <BookOpen size={48} className="text-blue-600" />
-                </div>
+                <div className="bg-blue-100 w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner"><BookOpen size={48} className="text-blue-600" /></div>
                 <h3 className="text-3xl text-slate-800 font-black mb-6">案例情境分析</h3>
                 <div className="bg-amber-50 p-6 rounded-2xl text-left text-xl text-slate-800 font-medium leading-relaxed border-l-8 border-orange-400 mb-8 shadow-sm">
-                  {scenario}
+                  小明為了做學校的專題報告，在網路上找到一張專業攝影師拍攝的「台灣黑熊」照片，他截取了照片的一小部分放在簡報中，並註明了攝影師姓名與出處。
                 </div>
-                <button onClick={() => setStep(1)} className="bg-orange-500 text-white font-black text-xl py-4 px-12 rounded-2xl shadow-[0_6px_0_#c2410c] hover:shadow-[0_3px_0_#c2410c] hover:translate-y-1 transition-all">
-                  開始分析 🔍
-                </button>
+                <button onClick={() => setStep(1)} className="bg-orange-500 text-white font-black text-xl py-4 px-12 rounded-2xl shadow-[0_6px_0_#c2410c] hover:shadow-[0_3px_0_#c2410c] hover:translate-y-1 transition-all">開始分析 🔍</button>
               </div>
             )}
-
             {step === 1 && (
               <div className="animate-fade-in">
                 <h3 className="text-2xl text-blue-600 font-black mb-6 text-center bg-blue-50 py-3 rounded-xl border border-blue-100">請根據四大關鍵評估此行為</h3>
@@ -314,33 +246,21 @@ export default function App() {
                     <div key={f.id} className="bg-slate-50 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center border border-slate-200">
                       <div className="text-slate-800 font-bold mb-3 sm:mb-0 w-full sm:w-1/3 text-lg">{f.name}</div>
                       <div className="flex space-x-3 w-full sm:w-2/3">
-                        {f.options.map(opt => (
+                        {f.options.map((opt, idx) => (
                           <button 
-                            key={opt.label}
-                            onClick={() => handleSelect(f.id, opt.val)}
-                            className={`flex-1 py-3 px-2 text-sm sm:text-base font-bold rounded-xl transition-all ${
-                              selections[f.id] === opt.val 
-                                ? 'bg-blue-500 text-white shadow-inner scale-105 border-transparent' 
-                                : 'bg-white text-slate-600 border-2 border-slate-200 hover:border-blue-300 hover:bg-blue-50'
-                            }`}
+                            key={idx} onClick={() => setSelections({...selections, [f.id]: idx})}
+                            className={`flex-1 py-3 px-2 text-sm sm:text-base font-bold rounded-xl transition-all ${selections[f.id] === idx ? 'bg-blue-500 text-white shadow-inner scale-105 border-transparent' : 'bg-white text-slate-600 border-2 border-slate-200 hover:border-blue-300 hover:bg-blue-50'}`}
                           >
-                            {opt.label}
+                            {opt}
                           </button>
                         ))}
                       </div>
                     </div>
                   ))}
                 </div>
-                <button 
-                  onClick={submitEvaluation} 
-                  disabled={isSubmitted}
-                  className="w-full bg-green-500 hover:bg-green-400 text-white font-black text-xl py-4 rounded-2xl shadow-[0_6px_0_#15803d] hover:shadow-[0_3px_0_#15803d] disabled:opacity-50 hover:translate-y-1 transition-all"
-                >
-                  提交判斷 ✔️
-                </button>
+                <button onClick={submitEvaluation} disabled={isSubmitted} className="w-full bg-green-500 hover:bg-green-400 text-white font-black text-xl py-4 rounded-2xl shadow-[0_6px_0_#15803d] hover:shadow-[0_3px_0_#15803d] disabled:opacity-50 hover:translate-y-1 transition-all">提交判斷 ✔️</button>
               </div>
             )}
-
             {step === 2 && (
               <div className="text-center animate-fade-in py-8">
                 <CheckCircle size={100} className="text-green-500 mx-auto mb-6" />
@@ -348,9 +268,7 @@ export default function App() {
                 <p className="text-slate-600 text-lg font-medium mb-10 leading-relaxed bg-green-50 p-6 rounded-2xl border border-green-200">
                   因為是為了<strong className="text-green-700">「教學/報告」</strong>目的，且只使用了<strong className="text-green-700">「一小部分」</strong>，不會對原作者的相片販售產生市場影響，因此極可能符合合理使用。
                 </p>
-                <button onClick={() => setGameState('level3')} className="bg-blue-500 text-white font-black text-xl py-4 px-10 rounded-2xl shadow-[0_6px_0_#1d4ed8] hover:shadow-[0_3px_0_#1d4ed8] hover:translate-y-1 transition-all">
-                  進入下一關 ➡️
-                </button>
+                <button onClick={() => setGameState('level3')} className="bg-blue-500 text-white font-black text-xl py-4 px-10 rounded-2xl shadow-[0_6px_0_#1d4ed8] hover:shadow-[0_3px_0_#1d4ed8] hover:translate-y-1 transition-all">進入下一關 ➡️</button>
               </div>
             )}
           </div>
@@ -359,55 +277,59 @@ export default function App() {
     );
   };
 
-  // --- Level 3: 創用CC配對 ---
   const Level3 = () => {
+    // 記憶體內動態生成加密ID，杜絕從HTML靜態找答案
+    const [board, setBoard] = useState({ imgs: [], descs: [], vMap: {} });
     const [selectedImg, setSelectedImg] = useState(null);
     const [matches, setMatches] = useState({}); 
     const [completed, setCompleted] = useState(false);
 
-    const handleImgClick = (id) => {
-      if (!matches[id]) setSelectedImg(id);
-    };
+    useEffect(() => {
+      const rnd = () => Math.random().toString(36).substring(2, 10);
+      let map = {}, iArr = [], dArr = [];
+      CC_BASE_DATA.forEach(item => {
+        const iID = rnd(), dID = rnd();
+        map[iID] = dID;
+        iArr.push({ id: iID, img: item.img, name: item.name });
+        dArr.push({ id: dID, desc: item.desc });
+      });
+      setBoard({ 
+        imgs: iArr.sort(() => Math.random() - 0.5), 
+        descs: dArr.sort(() => Math.random() - 0.5), 
+        vMap: map 
+      });
+    }, []);
+
+    const handleImgClick = (id) => { if (!matches[id]) setSelectedImg(id); };
 
     const handleDescClick = (descId) => {
-      if (selectedImg) {
-        if (selectedImg === descId) { 
-          // 如果已經配對過了，防止重複加分
-          if (matches[selectedImg]) return; 
-
-          setMatches(prev => ({...prev, [selectedImg]: descId}));
-          setScore(s => s + 5); 
-          setSelectedImg(null);
-          
-          if (Object.keys(matches).length + 1 === CC_LICENSES.length) {
-            setTimeout(() => setCompleted(true), 1000);
-          }
-        } else {
-          setSelectedImg(null);
+      if (!selectedImg) return;
+      if (board.vMap[selectedImg] === descId) { 
+        if (matches[selectedImg]) return; 
+        setMatches(prev => ({...prev, [selectedImg]: descId}));
+        setScore(s => s + 5); 
+        setSelectedImg(null);
+        if (Object.keys(matches).length + 1 === CC_BASE_DATA.length) {
+          setTimeout(() => setCompleted(true), 1000);
         }
+      } else {
+        setSelectedImg(null);
       }
     };
-
-    const shuffledDescs = React.useMemo(() => [...CC_LICENSES].sort(() => Math.random() - 0.5), []);
 
     return (
       <div className={`${bgStyle} !justify-start pt-10`}>
         <div className="max-w-5xl w-full">
           <Header title="Level 3: 創用CC 授權標章配對" />
-          
           <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl">
             {!completed ? (
               <>
-                <p className="text-blue-600 font-bold text-lg mb-6 text-center bg-blue-50 py-3 rounded-xl border border-blue-100">
-                  👆 請先點擊左側的「圖示」，再點擊右側對應的「授權說明」進行配對。
-                </p>
+                <p className="text-blue-600 font-bold text-lg mb-6 text-center bg-blue-50 py-3 rounded-xl border border-blue-100">👆 請先點擊左側的「圖示」，再點擊右側對應的「授權說明」進行配對。</p>
                 <div className="flex flex-col sm:flex-row gap-6">
-                  {/* 左側圖示 */}
                   <div className="w-full sm:w-5/12 space-y-4">
-                    {CC_LICENSES.map(cc => (
+                    {board.imgs.map(cc => (
                       <div 
-                        key={`img-${cc.id}`}
-                        onClick={() => handleImgClick(cc.id)}
+                        key={cc.id} onClick={() => handleImgClick(cc.id)}
                         className={`p-4 rounded-2xl border-4 cursor-pointer flex justify-center items-center transition-all bg-white
                           ${matches[cc.id] ? 'opacity-40 border-green-300 bg-green-50 scale-95 shadow-none' : 
                             selectedImg === cc.id ? 'border-orange-400 bg-orange-50 transform scale-105 shadow-md' : 'border-slate-100 hover:border-blue-300 shadow-sm'}`}
@@ -416,15 +338,12 @@ export default function App() {
                       </div>
                     ))}
                   </div>
-                  
-                  {/* 右側說明 */}
                   <div className="w-full sm:w-7/12 space-y-4">
-                    {shuffledDescs.map(cc => {
+                    {board.descs.map(cc => {
                       const isMatched = Object.values(matches).includes(cc.id);
                       return (
                         <div 
-                          key={`desc-${cc.id}`}
-                          onClick={() => !isMatched && handleDescClick(cc.id)}
+                          key={cc.id} onClick={() => !isMatched && handleDescClick(cc.id)}
                           className={`p-5 rounded-2xl border-2 text-sm sm:text-base font-bold transition-all shadow-sm
                             ${isMatched ? 'bg-green-100 border-green-400 text-green-700 opacity-60' : 
                               'bg-slate-50 border-slate-200 text-slate-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer'}`}
@@ -440,9 +359,7 @@ export default function App() {
               <div className="text-center py-12 animate-fade-in">
                 <Trophy size={100} className="text-yellow-400 mx-auto mb-6 animate-bounce" />
                 <h3 className="text-4xl text-slate-800 font-black mb-8">太厲害了！CC授權大師！</h3>
-                <button onClick={() => setGameState('level4')} className="bg-orange-500 text-white font-black text-xl py-4 px-10 rounded-2xl shadow-[0_6px_0_#c2410c] hover:shadow-[0_3px_0_#c2410c] hover:translate-y-1 transition-all">
-                  挑戰魔王關卡 ⚔️
-                </button>
+                <button onClick={() => setGameState('level4')} className="bg-orange-500 text-white font-black text-xl py-4 px-10 rounded-2xl shadow-[0_6px_0_#c2410c] hover:shadow-[0_3px_0_#c2410c] hover:translate-y-1 transition-all">挑戰魔王關卡 ⚔️</button>
               </div>
             )}
           </div>
@@ -451,49 +368,50 @@ export default function App() {
     );
   };
 
-  // --- Level 4: AI爭議題 ---
   const Level4 = () => {
-    const [isAnswered, setIsAnswered] = useState(false); // 防連點
-
-    const handleCorrect = () => {
-      if (isAnswered) return;
-      setIsAnswered(true);
-      setScore(s => s + 20); 
-      setGameState('court');
-    };
+    const [isAnswered, setIsAnswered] = useState(false);
+    
+    const L4_OPTS = [
+      'A. 完全合法，因為是 AI 畫的，沒有直接複製原圖。',
+      'B. 有極大爭議！可能涉及重製或改作侵權，尤其是模仿特定畫風且用於商業販售。',
+      'C. 屬於合理使用，因為 AI 生成的圖都是公眾領域 (Public Domain)。'
+    ];
 
     return (
       <div className={`${bgStyle} !justify-start pt-10`}>
         <div className="max-w-3xl w-full">
           <Header title="Level 4: AI 時代的新挑戰" />
-          
           <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl text-center">
             <div className="bg-yellow-100 w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner">
               <AlertTriangle size={50} className="text-yellow-500" />
             </div>
             <h3 className="text-3xl text-slate-800 font-black mb-6">爭議案例模擬</h3>
-            
             <div className="bg-amber-50 p-6 rounded-2xl text-left text-slate-800 border-l-8 border-yellow-400 mb-8 shadow-sm">
               <p className="font-black text-xl mb-3 text-yellow-700">情境：</p>
               <p className="text-lg font-medium leading-relaxed">小華使用 AI 繪圖軟體，輸入指令：「生成一張吉卜力工作室（宮崎駿）風格的動畫場景」，並將這張由 AI 生成的圖片印在馬克杯上，在網路上以一個 500 元販售。</p>
             </div>
-
             <p className="text-blue-600 mb-6 font-black text-xl">請問小華的行為是否有侵害著作權的疑慮？</p>
             
             <div className="space-y-4">
-              <button onClick={() => { alert('答錯囉！這有很大的風險！'); }} className="w-full bg-white hover:bg-slate-50 text-slate-600 py-4 px-6 rounded-2xl border-2 border-slate-200 hover:border-slate-300 transition-all text-left font-bold text-lg">
-                A. 完全合法，因為是 AI 畫的，沒有直接複製原圖。
-              </button>
-              <button 
-                onClick={handleCorrect} 
-                disabled={isAnswered}
-                className="w-full bg-white hover:bg-orange-50 text-slate-700 py-4 px-6 rounded-2xl border-2 border-slate-200 hover:border-orange-400 transition-all text-left font-black text-lg focus:ring-4 focus:ring-orange-200"
-              >
-                B. 有極大爭議！可能涉及重製或改作侵權，尤其是模仿特定畫風且用於商業販售。
-              </button>
-              <button onClick={() => { alert('答錯囉！AI作品不一定屬於公眾領域。'); }} className="w-full bg-white hover:bg-slate-50 text-slate-600 py-4 px-6 rounded-2xl border-2 border-slate-200 hover:border-slate-300 transition-all text-left font-bold text-lg">
-                C. 屬於合理使用，因為 AI 生成的圖都是公眾領域 (Public Domain)。
-              </button>
+              {L4_OPTS.map((opt, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => {
+                    if (isAnswered) return;
+                    // XOR 加密：正確答案是 index 1，(1 ^ 3) === 2
+                    if ((idx ^ 3) === 2) {
+                      setIsAnswered(true);
+                      setScore(s => s + 20); 
+                      setGameState('court');
+                    } else {
+                      alert('答錯囉！這有很大的風險！');
+                    }
+                  }}
+                  className="w-full bg-white hover:bg-slate-50 text-slate-700 py-4 px-6 rounded-2xl border-2 border-slate-200 hover:border-blue-300 transition-all text-left font-bold text-lg focus:ring-4 focus:ring-blue-100"
+                >
+                  {opt}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -501,29 +419,24 @@ export default function App() {
     );
   };
 
-  // --- Court Game: 法庭模擬 ---
   const CourtGame = () => {
     const [phase, setPhase] = useState(0);
-    const [isAnswered, setIsAnswered] = useState(false); // 防連點
+    const [isAnswered, setIsAnswered] = useState(false);
 
-    const handleVerdict = () => {
-      if (isAnswered) return;
-      setIsAnswered(true);
-      setScore(s => s + 20); 
-      setPhase(3);
-    };
+    const ACTS = [
+      '無罪！這屬於合理使用。',
+      '有罪！不符合合理使用。敲槌！'
+    ];
 
     return (
       <div className={`${bgStyle} !justify-start pt-10`}>
         <div className="max-w-4xl w-full">
           <Header title="Final Level: 合理使用法庭" />
-          
           <div className="bg-white rounded-3xl border border-slate-100 shadow-2xl overflow-hidden relative">
             <div className="bg-amber-100 p-6 border-b-4 border-amber-300 flex justify-center items-center">
               <Gavel size={40} className="text-amber-700 mr-3" />
               <h2 className="text-3xl text-amber-900 font-black tracking-widest">最高科技法庭</h2>
             </div>
-            
             <div className="p-8">
               {phase === 0 && (
                 <div className="animate-fade-in text-center">
@@ -531,57 +444,53 @@ export default function App() {
                   <p className="text-slate-700 text-lg font-medium leading-relaxed mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-200 text-left">
                     知名網紅未經授權，下載了電影片商尚未公開發行的電影，並剪輯成濃縮精華版，加入自己嘲諷的旁白，上傳至 YouTube 開啟盈利賺取廣告費。片商憤而提告。
                   </p>
-                  <button onClick={() => setPhase(1)} className="bg-blue-500 hover:bg-blue-400 text-white font-black text-xl py-4 px-10 rounded-2xl shadow-[0_6px_0_#1d4ed8] hover:shadow-[0_3px_0_#1d4ed8] hover:translate-y-1 transition-all">
-                    請原告 (片商) 發言 🗣️
-                  </button>
+                  <button onClick={() => setPhase(1)} className="bg-blue-500 hover:bg-blue-400 text-white font-black text-xl py-4 px-10 rounded-2xl shadow-[0_6px_0_#1d4ed8] hover:shadow-[0_3px_0_#1d4ed8] hover:translate-y-1 transition-all">請原告 (片商) 發言 🗣️</button>
                 </div>
               )}
-
               {phase === 1 && (
                 <div className="animate-fade-in">
                   <div className="bg-red-50 border-l-8 border-red-500 p-6 mb-8 rounded-r-2xl shadow-sm">
-                    <h4 className="text-red-600 font-black text-xl mb-3 flex items-center">
-                      <Shield size={24} className="mr-2" /> 原告（電影片商）：
-                    </h4>
+                    <h4 className="text-red-600 font-black text-xl mb-3 flex items-center"><Shield size={24} className="mr-2" /> 原告（電影片商）：</h4>
                     <p className="text-slate-800 text-lg font-medium">「法官大人！他不但盜版下載我們的心血，而且他剪輯了電影最精彩的結局，導致觀眾看完他的影片後，就不想買票去電影院看了，嚴重影響我們的票房收入（市場影響）！而且他是為了賺取 YouTube 廣告費（商業目的）！」</p>
                   </div>
                   <div className="text-center">
-                    <button onClick={() => setPhase(2)} className="bg-blue-500 hover:bg-blue-400 text-white font-black text-xl py-4 px-10 rounded-2xl shadow-[0_6px_0_#1d4ed8] hover:shadow-[0_3px_0_#1d4ed8] hover:translate-y-1 transition-all">
-                      請被告 (網紅) 發言 🗣️
-                    </button>
+                    <button onClick={() => setPhase(2)} className="bg-blue-500 hover:bg-blue-400 text-white font-black text-xl py-4 px-10 rounded-2xl shadow-[0_6px_0_#1d4ed8] hover:shadow-[0_3px_0_#1d4ed8] hover:translate-y-1 transition-all">請被告 (網紅) 發言 🗣️</button>
                   </div>
                 </div>
               )}
-
               {phase === 2 && (
                 <div className="animate-fade-in">
                   <div className="bg-green-50 border-l-8 border-green-500 p-6 mb-8 rounded-r-2xl shadow-sm">
-                    <h4 className="text-green-600 font-black text-xl mb-3 flex items-center">
-                      <Shield size={24} className="mr-2" /> 被告（網紅）：
-                    </h4>
+                    <h4 className="text-green-600 font-black text-xl mb-3 flex items-center"><Shield size={24} className="mr-2" /> 被告（網紅）：</h4>
                     <p className="text-slate-800 text-lg font-medium">「法官大人，我這是『二次創作』，屬於言論自由與評論！一部兩小時的電影，我只剪了 5 分鐘（使用分量少），符合合理使用啊！」</p>
                   </div>
-                  
                   <div className="bg-amber-50 p-6 rounded-2xl border-4 border-amber-200 text-center">
-                    <h4 className="text-amber-800 font-black text-2xl mb-6 flex justify-center items-center">
-                      <Gavel size={28} className="mr-2"/> 法官（您）的判決是？
-                    </h4>
+                    <h4 className="text-amber-800 font-black text-2xl mb-6 flex justify-center items-center"><Gavel size={28} className="mr-2"/> 法官（您）的判決是？</h4>
                     <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
-                      <button onClick={() => { alert('判決錯誤！被告使用的來源為非法盜版，且嚴重取代市場，很難主張合理使用。'); }} className="flex-1 bg-white hover:bg-slate-100 text-slate-600 border-2 border-slate-300 py-4 rounded-2xl font-black text-lg transition-all">
-                        無罪！這屬於合理使用。
-                      </button>
-                      <button 
-                        onClick={handleVerdict} 
-                        disabled={isAnswered}
-                        className="flex-1 bg-amber-500 hover:bg-amber-400 text-white py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#b45309] hover:shadow-[0_3px_0_#b45309] disabled:opacity-50 hover:translate-y-1 transition-all"
-                      >
-                        有罪！不符合合理使用。敲槌！
-                      </button>
+                      {ACTS.map((act, idx) => (
+                        <button 
+                          key={idx}
+                          disabled={isAnswered}
+                          onClick={() => {
+                            if (isAnswered) return;
+                            // 餘數加密：正確為 index 1。(1 * 7) % 5 === 2
+                            if ((idx * 7) % 5 === 2) {
+                              setIsAnswered(true);
+                              setScore(s => s + 20); 
+                              setPhase(3);
+                            } else {
+                              alert('判決錯誤！被告使用的來源為非法盜版，且嚴重取代市場，很難主張合理使用。');
+                            }
+                          }}
+                          className={`flex-1 py-4 rounded-2xl font-black text-lg transition-all ${idx === 1 ? 'bg-amber-500 hover:bg-amber-400 text-white shadow-[0_6px_0_#b45309] hover:shadow-[0_3px_0_#b45309]' : 'bg-white hover:bg-slate-100 text-slate-600 border-2 border-slate-300'}`}
+                        >
+                          {act}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
               )}
-
               {phase === 3 && (
                 <div className="text-center animate-fade-in">
                   <Gavel size={100} className="text-amber-600 mx-auto mb-6 animate-bounce" />
@@ -595,9 +504,7 @@ export default function App() {
                       <li>產生市場替代效應（觀眾看完就不去看了）。</li>
                     </ul>
                   </div>
-                  <button onClick={() => { stopGlobalTimer(); setGameState('result'); }} className="bg-orange-500 text-white font-black py-4 px-12 rounded-2xl shadow-[0_6px_0_#c2410c] hover:shadow-[0_3px_0_#c2410c] hover:translate-y-1 transition-all text-2xl">
-                    查看最終成績單 📜
-                  </button>
+                  <button onClick={() => { stopGlobalTimer(); setGameState('result'); }} className="bg-orange-500 text-white font-black py-4 px-12 rounded-2xl shadow-[0_6px_0_#c2410c] hover:shadow-[0_3px_0_#c2410c] hover:translate-y-1 transition-all text-2xl">查看最終成績單 📜</button>
                 </div>
               )}
             </div>
@@ -607,55 +514,41 @@ export default function App() {
     );
   };
 
-  // --- Result: 成績與上傳GAS ---
   const ResultScreen = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
 
-    // 評等邏輯
-    let rank = "";
-    let colorClass = "";
-    let bgClass = "";
+    let rank = "", colorClass = "", bgClass = "";
     if (score >= 90) { rank = "合理使用守護神 👑"; colorClass = "text-yellow-500"; bgClass = "bg-yellow-50 border-yellow-200"; }
     else if (score >= 70) { rank = "著作小律師 ⚖️"; colorClass = "text-blue-500"; bgClass = "bg-blue-50 border-blue-200"; }
     else if (score >= 60) { rank = "守法達人 🛡️"; colorClass = "text-green-500"; bgClass = "bg-green-50 border-green-200"; }
     else { rank = "再挑戰一次吧 🥺"; colorClass = "text-red-500"; bgClass = "bg-red-50 border-red-200"; }
 
-    // 模擬傳送資料到 Google Apps Script
-    const sendData = async () => {
-      setIsSaving(true);
-      
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1500)); 
-        // fetch 串接處...
-        setSaveSuccess(true);
-      } catch (error) {
-        console.error("Save error", error);
-      } finally {
-        setIsSaving(false);
-      }
-    };
-
     useEffect(() => {
+      const sendData = async () => {
+        setIsSaving(true);
+        try {
+          await new Promise(resolve => setTimeout(resolve, 1500)); 
+          setSaveSuccess(true);
+        } catch (error) { console.error(error); } 
+        finally { setIsSaving(false); }
+      };
       sendData(); 
     }, []);
 
     return (
       <div className={bgStyle}>
         <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border-t-8 border-blue-400 max-w-md w-full text-center relative overflow-hidden">
-          
           <div className="mb-6 flex justify-center">
             <div className={`p-6 rounded-full border-4 shadow-inner relative ${bgClass}`}>
               <Trophy size={90} className={colorClass} />
               {score >= 90 && <div className="absolute -top-4 -right-4 text-4xl animate-bounce">✨</div>}
             </div>
           </div>
-
           <h1 className={`text-3xl font-black mb-3 ${colorClass}`}>{rank}</h1>
           <h2 className="text-xl text-slate-700 font-bold mb-8 bg-slate-50 py-2 rounded-xl inline-block px-6 border border-slate-200">
             {user.class} 班 {user.number} 號 <br/><span className="text-blue-600 text-2xl">{user.name}</span>
           </h2>
-          
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100">
               <div className="text-orange-800 font-bold mb-1">最終得分</div>
@@ -666,21 +559,12 @@ export default function App() {
               <div className="text-4xl font-black text-blue-500">{timeElapsed}s</div>
             </div>
           </div>
-
           {isSaving ? (
-            <div className="text-blue-500 flex items-center justify-center font-bold animate-pulse bg-blue-50 py-3 rounded-xl">
-              <Clock size={24} className="mr-2" /> 成績上傳至資料庫中...
-            </div>
+            <div className="text-blue-500 flex items-center justify-center font-bold animate-pulse bg-blue-50 py-3 rounded-xl"><Clock size={24} className="mr-2" /> 成績上傳至資料庫中...</div>
           ) : saveSuccess ? (
-            <div className="text-green-600 flex items-center justify-center font-black bg-green-50 py-3 rounded-xl border border-green-200">
-              <CheckCircle size={24} className="mr-2" /> 成績已成功上傳！
-            </div>
+            <div className="text-green-600 flex items-center justify-center font-black bg-green-50 py-3 rounded-xl border border-green-200"><CheckCircle size={24} className="mr-2" /> 成績已成功上傳！</div>
           ) : null}
-
-          <button 
-            onClick={() => window.location.reload()} 
-            className="w-full mt-8 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black py-4 rounded-2xl transition-all border-2 border-slate-300"
-          >
+          <button onClick={() => window.location.reload()} className="w-full mt-8 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black py-4 rounded-2xl transition-all border-2 border-slate-300">
             🔄 重新挑戰
           </button>
         </div>
