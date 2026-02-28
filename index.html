@@ -1,163 +1,452 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>著作合理使用挑戰賽 V3</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-.fade{animation:fade .5s ease}
-@keyframes fade{from{opacity:0;transform:translateY(20px)}to{opacity:1}}
-.locked{pointer-events:none;opacity:.6}
-.btn-press{transition:all .15s}
-.btn-press:active{transform:translateY(3px) scale(.98)}
-img.cc-icon{height:80px;object-fit:contain;margin:0 auto;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>個人資料保護與著作合理使用 - 課堂教學網</title>
+    <style>
+        /* CSS 樣式區：控制網頁外觀 */
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --card: #ffffff;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+            background-color: var(--bg);
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 卡片設計 */
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 25px;
+        }
+
+        /* 導覽列 */
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* 登入表單 */
+        .login-box {
+            max-width: 400px;
+            margin: 50px auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .btn {
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: opacity 0.2s;
+            width: 100%;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-secondary { background: var(--secondary); color: white; }
+        .btn:hover { opacity: 0.9; }
+
+        /* 測驗題目 */
+        .question {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 20px;
+        }
+
+        .options label {
+            display: block;
+            background: #f1f5f9;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .options label:hover { background: #e2e8f0; }
+        .options input { width: auto; margin-right: 10px; }
+
+        /* 解析區塊 */
+        .explanation {
+            display: none;
+            margin-top: 10px;
+            padding: 15px;
+            background: #f0fdf4;
+            border-left: 4px solid var(--success);
+            color: #166534;
+            border-radius: 4px;
+        }
+
+        /* 表格紀錄 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th { background: #f8fafc; }
+
+        .hidden { display: none; }
+        
+        .result-msg {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        /* 響應式 */
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+            .card { padding: 20px; }
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-indigo-100 via-sky-100 to-purple-200">
-<div id="app"></div>
+<body>
+
+<div id="app">
+    <!-- 頁首 -->
+    <div id="nav-section" class="header hidden">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <span id="user-display">學生姓名</span>
+            <div>
+                <button class="btn btn-secondary" style="padding: 5px 15px; width: auto;" onclick="showRecords()">紀錄</button>
+                <button class="btn btn-danger" style="padding: 5px 15px; width: auto;" onclick="logout()">登出</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. 登入畫面 -->
+    <div id="login-screen" class="container">
+        <div class="card login-box">
+            <h2 style="text-align: center; color: var(--primary);">資訊科技 課堂測驗</h2>
+            <div class="form-group">
+                <label>班級</label>
+                <select id="input-class">
+                    <option value="701">701</option>
+                    <option value="702">702</option>
+                    <option value="703">703</option>
+                    <option value="704">704</option>
+                    <option value="705">705</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>座號</label>
+                <input type="number" id="input-seat" placeholder="例如：01">
+            </div>
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="input-name" placeholder="請輸入您的姓名">
+            </div>
+            <button class="btn btn-primary" onclick="login()">進入課程</button>
+            <p style="text-align: center; margin-top: 20px;">
+                <a href="javascript:void(0)" onclick="showRecords()">查看歷史紀錄</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- 2. 課程內容與測驗畫面 -->
+    <div id="main-screen" class="container hidden">
+        <div class="card">
+            <h2 style="color: var(--primary);">第3節 著作合理使用</h2>
+            <p>合理使用並不是一項可以隨意主張的權利，而是必須根據具體情況、目的與影響，進行審慎判斷，才能在保障創作者權益與促進社會利用之間取得平衡。</p>
+            <div style="background: #eff6ff; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <strong>核心概念：</strong><br>
+                為了在保障著作人權利的同時，也兼顧社會發展與公共利益，《著作權法》訂定了合理使用的範圍，回應學術、新聞、言論、行政等公益需求。
+            </div>
+            <p><strong>限制：</strong>合理使用並非任意使用，而是法律允許的「例外」。必須在不經過著作人同意下，有限度地使用。</p>
+        </div>
+
+        <div class="card">
+            <h3>📝 隨堂檢測</h3>
+            <form id="quiz-form">
+                <!-- 題目 1 -->
+                <div class="question" data-ans="3">
+                    <p><strong>1. 下列哪一項屬於「個人資料」？</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q1" value="1"> 喜歡吃的食物種類</label>
+                        <label><input type="radio" name="q1" value="2"> 寵物的名字</label>
+                        <label><input type="radio" name="q1" value="3"> 身分證字號</label>
+                        <label><input type="radio" name="q1" value="4"> 所在的直轄市名稱</label>
+                    </div>
+                    <div class="explanation">解析：正確解答為「身分證字號」。個資法保護的是能直接或間接識別個人的資料。</div>
+                </div>
+
+                <!-- 題目 2 -->
+                <div class="question" data-ans="2">
+                    <p><strong>2. 如果個人資料被不法人士取得，最可能會發生什麼情況？</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q2" value="1"> 獲得免費點數或優惠券</label>
+                        <label><input type="radio" name="q2" value="2"> 收到陌生的詐騙電話或簡訊</label>
+                        <label><input type="radio" name="q2" value="3"> 可以參加更多活動抽獎</label>
+                        <label><input type="radio" name="q2" value="4"> 得到更多交朋友的機會</label>
+                    </div>
+                    <div class="explanation">解析：個資外洩最常見的危害就是被用於詐騙或騷擾。</div>
+                </div>
+
+                <!-- 題目 3 -->
+                <div class="question" data-ans="1">
+                    <p><strong>3. 小明在寫報告時，引用課本圖片並註明來源，這屬於？</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q3" value="1"> 著作合理使用</label>
+                        <label><input type="radio" name="q3" value="2"> 偷別人的創作</label>
+                        <label><input type="radio" name="q3" value="3"> 違法行為</label>
+                        <label><input type="radio" name="q3" value="4"> 侵害著作權</label>
+                    </div>
+                    <div class="explanation">解析：在教育、學術目的下適度引用並註明出處，通常符合合理使用原則。</div>
+                </div>
+
+                <!-- 題目 4 -->
+                <div class="question" data-ans="4">
+                    <p><strong>4. 下列哪一種情況「不符合」合理使用原則？</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q4" value="1"> 引用圖片並註明出處</label>
+                        <label><input type="radio" name="q4" value="2"> 自己買的CD翻錄一份自己聽</label>
+                        <label><input type="radio" name="q4" value="3"> 教學播放影片片段討論</label>
+                        <label><input type="radio" name="q4" value="4"> 將他人文章整篇當作作業繳交</label>
+                    </div>
+                    <div class="explanation">解析：將他人文章整篇盜用屬於抄襲，嚴重侵害著作權。</div>
+                </div>
+
+                <div id="result-area" class="result-msg"></div>
+                <button type="button" id="submit-btn" class="btn btn-primary" onclick="submitQuiz()">送出測驗</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. 作答紀錄畫面 -->
+    <div id="record-screen" class="container hidden">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>📊 歷史作答紀錄</h2>
+                <button class="btn btn-secondary" style="width: auto;" onclick="goBack()">返回</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>班級</th>
+                        <th>座號</th>
+                        <th>姓名</th>
+                        <th>分數</th>
+                        <th>時間</th>
+                    </tr>
+                </thead>
+                <tbody id="record-table-body">
+                    <!-- 資料將由 JS 動態產生 -->
+                </tbody>
+            </table>
+            <button class="btn btn-danger" style="margin-top: 30px; background: #94a3b8;" onclick="clearHistory()">清除所有紀錄</button>
+        </div>
+    </div>
+</div>
 
 <script>
-// ===== 全域設定 =====
-const GAS_URL="https://script.google.com/macros/s/AKfycbyva0kqJmE1E1BEwwsjARpbbrRzjmdNDEndgqq0jfYXlQc1xz4L6_oj1K3ZsnbQpzd8/exec";
-let score=0,time=0,index=0,locked=false,timer=null;
+    /* JavaScript 邏輯區：控制網頁互動 */
+    let currentUser = null;
 
-// ===== 題庫（加密答案 + 半加密） =====
-const QUESTIONS=[
-  // Level1 基礎合理使用
-  {q:"轉發盜版影片給同學，但沒收錢",a:"MQ=="},
-  {q:"引用文章摘要並標示出處",a:"MA=="},
-  {q:"整本書掃描傳給朋友",a:"MQ=="},
-  {q:"教學報告僅使用部分圖片並註明來源",a:"MA=="},
-  {q:"把他人Instagram貼文直接轉貼到網站",a:"MQ=="},
-  
-  // 創用CC圖示識別
-  {q:"以下哪一個是「姓名標示 (BY)」授權？<br><img class='cc-icon' src='https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by.png'>",a:"MA=="},
-  {q:"這是哪種授權？<br><img class='cc-icon' src='https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nc.png'>",a:"MQ=="},
-  {q:"這是哪種授權？<br><img class='cc-icon' src='https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-sa.png'>",a:"MA=="},
-  {q:"哪個圖示「禁止改作」？<br><img class='cc-icon' src='https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nd.png'>",a:"MQ=="},
-  
-  // Level2 合理使用判斷
-  {q:"翻譯未公開作品並上網發布",a:"MQ=="},
-  {q:"寫觀後感公開發表並加註影片名稱",a:"MA=="},
-  {q:"掃描小說PDF給同學練習",a:"MQ=="},
-  {q:"上課評論電影劇情重點",a:"MA=="},
-  
-  // Level3 授權組合理解
-  {q:"BY-NC 代表可修改 & 可商業使用？",a:"MQ=="},
-  {q:"PD Mark 公眾領域授權意味著？",a:"MA=="},
-  {q:"BY-NC-SA 必須相同方式分享？",a:"MA=="},
-  {q:"BY-NC-ND 可商業 & 禁止改作？",a:"MQ=="},
-  
-  // Level4 AI & 著作權爭議
-  {q:"AI 模仿特定風格用於馬克杯販售",a:"MQ=="},
-  {q:"AI 生成圖必定沒有著作權問題",a:"MQ=="},
-];
+    // 1. 登入功能
+    function login() {
+        const cls = document.getElementById('input-class').value;
+        const seat = document.getElementById('input-seat').value;
+        const name = document.getElementById('input-name').value;
 
-// ===== 解密函式 =====
-function decode(s){
-  return atob(s)==="0";
-}
+        if (!seat || !name) {
+            alert("請填寫完整的座號與姓名喔！");
+            return;
+        }
 
-// ===== 畫面渲染 =====
-function render(html){document.getElementById("app").innerHTML=html;}
+        currentUser = { cls, seat, name };
+        document.getElementById('user-display').innerText = `${cls} 班 ${seat} 號 ${name}`;
+        
+        // 切換畫面
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('nav-section').classList.remove('hidden');
+        document.getElementById('main-screen').classList.remove('hidden');
+        document.getElementById('record-screen').classList.add('hidden');
+        
+        resetQuiz();
+    }
 
-// ===== 開始頁 =====
-function showHome(){
-render(`
-<div class="flex items-center justify-center min-h-screen fade">
-  <div class="bg-white p-8 rounded-3xl shadow-xl text-center w-96">
-    <h1 class="text-3xl font-black text-indigo-600 mb-4">著作合理使用挑戰賽</h1>
-    <iframe class="w-full aspect-video mb-4" src="https://www.youtube.com/embed/9fuajCuCV4g"></iframe>
-    <button onclick="startQuiz()" class="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold btn-press">開始挑戰 🚀</button>
-  </div>
-</div>
-`);
-}
+    // 2. 登出
+    function logout() {
+        currentUser = null;
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('nav-section').classList.add('hidden');
+        document.getElementById('main-screen').classList.add('hidden');
+        document.getElementById('record-screen').classList.add('hidden');
+    }
 
-// ===== 題目頁 =====
-function showQuestion(){
-if(index>=QUESTIONS.length){
-  return finish();
-}
+    // 3. 送出測驗
+    function submitQuiz() {
+        const questions = document.querySelectorAll('.question');
+        let score = 0;
+        let allAnswered = true;
 
-locked=false;
-let data=QUESTIONS[index];
+        questions.forEach((q, index) => {
+            const selected = q.querySelector('input:checked');
+            if (!selected) {
+                allAnswered = false;
+            }
+        });
 
-render(`
-<div class="p-8 fade">
-<div class="bg-white p-6 rounded-2xl shadow-xl">
-  <div class="flex justify-between mb-4 text-lg font-bold">
-    <div>⏱ <span id="t">${time}</span>s</div>
-    <div>🏆 ${score}</div>
-  </div>
-  <h2 class="text-xl mb-6">${data.q}</h2>
-  <div class="flex justify-center gap-6">
-    <button onclick="answer(true)" class="bg-blue-500 text-white px-8 py-3 rounded-xl btn-press">符合</button>
-    <button onclick="answer(false)" class="bg-red-500 text-white px-8 py-3 rounded-xl btn-press">不符合</button>
-  </div>
-</div>
-</div>
-`);
-}
+        if (!allAnswered) {
+            alert("還有題目沒寫完喔！");
+            return;
+        }
 
-// ===== 作答處理 =====
-function answer(val){
-  if(locked)return;
-  locked=true;
+        // 批改
+        questions.forEach((q) => {
+            const selected = q.querySelector('input:checked');
+            const correctAns = q.getAttribute('data-ans');
+            const explanation = q.querySelector('.explanation');
+            
+            explanation.style.display = 'block'; // 顯示解析
+            
+            if (selected.value === correctAns) {
+                score += 25;
+                selected.parentElement.style.background = "#dcfce7";
+                selected.parentElement.style.color = "#166534";
+            } else {
+                selected.parentElement.style.background = "#fee2e2";
+                selected.parentElement.style.color = "#991b1b";
+                // 標示正確答案
+                q.querySelector(`input[value="${correctAns}"]`).parentElement.style.border = "2px solid #16a34a";
+            }
+            
+            // 停用選項避免重複更改
+            q.querySelectorAll('input').forEach(input => input.disabled = true);
+        });
 
-  let correct = decode(QUESTIONS[index].a);
+        document.getElementById('result-area').innerText = `測驗完成！你的得分是：${score} 分`;
+        document.getElementById('submit-btn').classList.add('hidden');
 
-  if(val===correct){
-    score += 5;
-  }
-  index++;
-  setTimeout(showQuestion,900);
-}
+        // 儲存至本地記憶體 (LocalStorage)
+        saveToLocalStorage(score);
+    }
 
-// ===== 結算頁 =====
-function finish(){
-clearInterval(timer);
+    // 4. 重置測驗
+    function resetQuiz() {
+        document.getElementById('quiz-form').reset();
+        document.getElementById('result-area').innerText = "";
+        document.getElementById('submit-btn').classList.remove('hidden');
+        document.querySelectorAll('.explanation').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.options label').forEach(el => {
+            el.style.background = "";
+            el.style.color = "";
+            el.style.border = "";
+        });
+        document.querySelectorAll('input').forEach(input => input.disabled = false);
+    }
 
-render(`
-<div class="flex items-center justify-center min-h-screen fade">
-  <div class="bg-white p-8 rounded-3xl shadow-xl text-center w-96">
-    <h2 class="text-2xl font-black text-indigo-600 mb-4">完成挑戰 🎉</h2>
-    <p class="text-xl font-bold mb-2">${score} 分</p>
-    <p class="mb-4">${time} 秒</p>
-    <button onclick="upload()" class="bg-blue-500 text-white px-6 py-3 rounded-xl btn-press">上傳成績</button>
-    <p class="text-sm text-slate-600 mt-4">參考資料來源：<br>
-      <a href="https://tw.creativecommons.net/home-page/" class="underline text-blue-600">Creative Commons 台灣 官方</a>
-    </p>
-  </div>
-</div>
-`);
-}
+    // 5. 儲存紀錄
+    function saveToLocalStorage(score) {
+        let history = JSON.parse(localStorage.getItem('quiz_records')) || [];
+        const newRecord = {
+            cls: currentUser.cls,
+            seat: currentUser.seat,
+            name: currentUser.name,
+            score: score,
+            time: new Date().toLocaleString()
+        };
+        history.push(newRecord);
+        localStorage.setItem('quiz_records', JSON.stringify(history));
+    }
 
-// ===== 上傳 =====
-async function upload(){
-let form=new URLSearchParams();
-form.append("score",score);
-form.append("time",time);
+    // 6. 顯示紀錄
+    function showRecords() {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('main-screen').classList.add('hidden');
+        document.getElementById('record-screen').classList.remove('hidden');
 
-await fetch(GAS_URL,{
-method:"POST",
-mode:"no-cors",
-headers:{'Content-Type':'application/x-www-form-urlencoded'},
-body:form.toString()
-});
-alert("成績已上傳！");
-}
+        const history = JSON.parse(localStorage.getItem('quiz_records')) || [];
+        const tbody = document.getElementById('record-table-body');
+        tbody.innerHTML = "";
 
-// ===== 計時 =====
-function startQuiz(){
-score=time=index=0;
-timer=setInterval(()=>{time++;document.getElementById("t")&&(document.getElementById("t").innerText=time)},1000);
-showQuestion();
-}
+        if (history.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center'>目前尚無紀錄</td></tr>";
+        } else {
+            history.reverse().forEach(r => {
+                const row = `<tr>
+                    <td>${r.cls}</td>
+                    <td>${r.seat}</td>
+                    <td>${r.name}</td>
+                    <td style="font-weight:bold; color:var(--primary)">${r.score}</td>
+                    <td style="font-size:12px; color:gray">${r.time}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+    }
 
-// ===== 初始化 =====
-showHome();
+    // 7. 返回
+    function goBack() {
+        if (currentUser) {
+            document.getElementById('main-screen').classList.remove('hidden');
+            document.getElementById('record-screen').classList.add('hidden');
+        } else {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('record-screen').classList.add('hidden');
+        }
+    }
+
+    // 8. 清除紀錄
+    function clearHistory() {
+        if (confirm("確定要刪除這台電腦上的所有作答紀錄嗎？")) {
+            localStorage.removeItem('quiz_records');
+            showRecords();
+        }
+    }
 </script>
+
 </body>
 </html>
