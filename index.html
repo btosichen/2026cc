@@ -26,7 +26,6 @@
 
         .container { max-width: 800px; margin: 0 auto; padding: 20px; position: relative; }
         
-        /* 可愛風格卡片 */
         .card {
             background: #ffffff;
             border: 4px solid #f0f0f0;
@@ -41,15 +40,32 @@
             background: var(--primary);
             background: linear-gradient(135deg, #ff7eb9 0%, #ff758c 100%);
             color: white;
-            padding: 2rem 0;
+            padding: 1.5rem 0;
             text-align: center;
             border-bottom: 6px solid #ff4d91;
             margin-bottom: 20px;
         }
 
-        h1 { margin: 0; font-size: 2.2rem; text-shadow: 2px 2px 0px rgba(0,0,0,0.1); }
+        h1 { margin: 0; font-size: 2rem; text-shadow: 2px 2px 0px rgba(0,0,0,0.1); }
 
-        /* 遊戲進度條 */
+        /* 影片容器 */
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 */
+            height: 0;
+            overflow: hidden;
+            border-radius: 20px;
+            border: 4px solid var(--secondary);
+            margin-bottom: 20px;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
         .progress-container {
             display: flex;
             justify-content: space-between;
@@ -66,36 +82,44 @@
             font-weight: bold;
             border-radius: 40px;
             color: #ccc;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
         }
         .step.active { background: var(--secondary); color: white; box-shadow: 0 4px 0 #4da3ff; }
 
-        /* 按鈕樣式 */
         .btn {
             cursor: pointer;
             border: none;
             border-radius: 50px;
-            padding: 15px 30px;
+            padding: 12px 25px;
             font-size: 1.1rem;
             font-weight: 900;
             transition: all 0.2s;
             display: inline-block;
             box-shadow: 0 5px 0 rgba(0,0,0,0.1);
+            text-decoration: none;
+            text-align: center;
         }
-        .btn-primary { background: var(--primary); color: white; width: 100%; margin-top: 10px; }
+        .btn-primary { background: var(--primary); color: white; width: 100%; margin-top: 10px; box-sizing: border-box; }
         .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 0 #ff4d91; }
+        .btn-outline { 
+            background: white; 
+            color: var(--secondary); 
+            border: 3px solid var(--secondary); 
+            width: 100%; 
+            margin-top: 15px;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+        }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
 
-        /* Level 1: 是非題按鈕 */
         .tf-area { display: flex; justify-content: space-around; margin: 30px 0; }
         .tf-btn { 
-            width: 100px; height: 100px; font-size: 50px; border-radius: 50%; 
+            width: 80px; height: 80px; font-size: 40px; border-radius: 50%; 
             display: flex; align-items: center; justify-content: center;
             border: 5px solid rgba(0,0,0,0.05);
         }
 
-        /* Level 2: 四大原則項目 */
         .p-item {
             border: 3px solid #f0f0f0;
             padding: 15px;
@@ -106,37 +130,26 @@
             transition: 0.3s;
             font-weight: bold;
         }
-        .p-item.selected { 
-            border-color: var(--secondary); 
-            background: #e0f7ff; 
-            transform: scale(1.02);
-            box-shadow: 4px 4px 0px var(--secondary);
-        }
+        .p-item.selected { border-color: var(--secondary); background: #e0f7ff; box-shadow: 4px 4px 0px var(--secondary); }
 
-        /* Level 3: CC 配對 */
-        .cc-img { height: 45px; margin-right: 15px; filter: drop-shadow(2px 2px 0px #eee); }
+        .cc-img { height: 40px; margin-right: 15px; }
         .match-row {
-            display: flex; align-items: center; margin-bottom: 15px;
-            background: #fff9fb; padding: 12px; border-radius: 15px;
+            display: flex; align-items: center; margin-bottom: 12px;
+            background: #fff9fb; padding: 10px; border-radius: 15px;
             border: 2px dashed var(--primary);
         }
-        select {
-            padding: 8px; border-radius: 10px; border: 2px solid #ddd;
-            flex-grow: 1; font-size: 1rem;
-        }
+        select { padding: 8px; border-radius: 10px; border: 2px solid #ddd; flex-grow: 1; font-size: 0.9rem; }
 
-        .timer { font-size: 32px; font-weight: 900; color: var(--danger); margin-bottom: 10px; }
+        .timer { font-size: 28px; font-weight: 900; color: var(--danger); }
         .hidden { display: none; }
-        
-        #user-info-bar { font-size: 1.1rem; margin-top: 10px; font-weight: bold; }
+        #user-info-bar { font-size: 1rem; margin-top: 10px; font-weight: bold; }
 
         input[type="text"], input[type="number"], select {
             width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px;
             border: 3px solid #eee; box-sizing: border-box;
         }
 
-        footer { text-align: center; padding: 40px; color: #aaa; font-size: 0.9rem; }
-        footer a { color: var(--primary); font-weight: bold; }
+        footer { text-align: center; padding: 30px; color: #aaa; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -149,20 +162,29 @@
 </div>
 
 <div class="container">
-    <!-- 0. 登入畫面 -->
+    <!-- 0. 登入與首頁教學 -->
     <div id="screen-login" class="card">
-        <h2 style="text-align: center; color: var(--primary);">冒險者登入</h2>
-        <label>🌈 你的班級</label>
-        <select id="input-class">
-            <option value="701">701 班</option><option value="702">702 班</option>
-            <option value="703">703 班</option><option value="704">704 班</option>
-            <option value="705">705 班</option>
-        </select>
-        <label>🔢 你的座號</label>
-        <input type="number" id="input-seat" placeholder="例如：05">
-        <label>👤 英雄姓名</label>
-        <input type="text" id="input-name" placeholder="輸入你的名字">
-        <button class="btn btn-primary" onclick="startGame()">開始冒險！</button>
+        <h3 style="text-align: center; color: var(--secondary); margin-top: 0;">🎬 先看影片複習一下吧！</h3>
+        <div class="video-container">
+            <iframe src="https://www.youtube.com/embed/9fuajCuCV4g" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+
+        <div style="border-top: 2px dashed #eee; padding-top: 20px;">
+            <h3 style="text-align: center; color: var(--primary);">準備好就開始闖關！</h3>
+            <label>🌈 你的班級</label>
+            <select id="input-class">
+                <option value="701">701 班</option><option value="702">702 班</option>
+                <option value="703">703 班</option><option value="704">704 班</option>
+                <option value="705">705 班</option>
+            </select>
+            <label>🔢 你的座號</label>
+            <input type="number" id="input-seat" placeholder="例如：05">
+            <label>👤 英雄姓名</label>
+            <input type="text" id="input-name" placeholder="輸入你的名字">
+            <button class="btn btn-primary" onclick="startGame()">開始冒險！</button>
+            
+            <a href="https://docs.google.com/spreadsheets/d/1l-9wEmIvy17y7eSRwBloJgAw9JocV74eKiItzcPm9Hw/edit?usp=sharing" target="_blank" class="btn btn-outline">📊 查看全班作答紀錄</a>
+        </div>
     </div>
 
     <!-- 進度條 -->
@@ -176,13 +198,13 @@
     <!-- Level 1: 是非快問快答 -->
     <div id="level-1" class="card hidden">
         <div style="text-align: right;"><span class="timer" id="l1-timer">60</span> 秒</div>
-        <h3 id="l1-q-text" style="font-size: 1.4rem; min-height: 80px;">載入題目中...</h3>
+        <h3 id="l1-q-text" style="min-height: 80px;">載入題目中...</h3>
         <p style="color: var(--secondary); font-weight: bold;">進度：<span id="l1-q-index">1</span>/10</p>
         <div class="tf-area">
             <button class="btn btn-success tf-btn" onclick="checkL1(true)">⭕</button>
             <button class="btn btn-danger tf-btn" onclick="checkL1(false)">❌</button>
         </div>
-        <p id="l1-feedback" style="text-align:center; font-size: 1.5rem; height: 30px;"></p>
+        <p id="l1-feedback" style="text-align:center; font-size: 1.2rem; height: 30px; font-weight: bold;"></p>
     </div>
 
     <!-- Level 2: 四大原則判斷 -->
@@ -205,8 +227,9 @@
     <!-- Level 3: CC 授權配對 -->
     <div id="level-3" class="card hidden">
         <h3 style="color: var(--primary);">🧩 Level 3：標誌與名稱連連看</h3>
+        <p style="font-size: 0.9rem; color: #888;">注意：題目順序每次都會變喔！</p>
         <div id="cc-match-area">
-            <!-- 由 JS 加密載入 -->
+            <!-- 由 JS 打亂順序載入 -->
         </div>
         <button class="btn btn-primary" onclick="checkL3()">核對答案 ➔</button>
     </div>
@@ -231,24 +254,24 @@
 </div>
 
 <footer>
-    參考資料來源：<a href="https://tw.creativecommons.net/home-page/" target="_blank">台灣創用 CC 資訊網</a><br>
-    本網頁採可愛風由陳政川老師設計 🧸 專供教學使用
+    參考資料來源：<a href="https://tw.creativecommons.net/home-page/" target="_blank" style="color:var(--primary);">台灣創用 CC 資訊網</a>
 </footer>
 
 <script>
-    // --- 加密答案庫 (使用 Base64 簡單混淆，學生不易直接看出) ---
-    // 解碼 function: window.atob()
+    // --- 加密答案與設定 ---
     const _E_ANS = {
         l1: ["dHJ1ZQ==", "ZmFsc2U=", "dHJ1ZQ==", "dHJ1ZQ==", "dHJ1ZQ==", "ZmFsc2U=", "dHJ1ZQ==", "ZmFsc2U=", "ZmFsc2U=", "dHJ1ZQ=="],
-        cc: ["Qlk=", "TkM=", "TkQ=", "U0E="]
+        cc: { "BY": "Qlk=", "NC": "TkM=", "ND": "TkQ=", "SA": "U0E=" }
     };
 
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzX-9l7xgkpEmadhoKOnwSRh-VC6vTUhu4ZquIOuuIE2qQgWzt1-Vchp2LraiVVLpQV/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzk2pJXhuCiGE2SAo7UxxXclZ9XWpzaTdMOBS68c-RMJCC5nfG-9UGUliVgOfaPwApB/exec";
+    
     let score = 0;
     let user = {};
     let l1Index = 0;
     let l1Timer = 60;
     let timerId = null;
+    let startTime = null;
 
     const l1Questions = [
         "著作權是從作品完成的那一刻起就自動產生的。",
@@ -263,13 +286,13 @@
         "將別人的詩錄音成 Podcast 並公開播放，需要取得授權。"
     ];
 
-    // --- 遊戲初始化 ---
     function startGame() {
         const cls = document.getElementById('input-class').value;
         const seat = document.getElementById('input-seat').value;
         const name = document.getElementById('input-name').value;
         if(!seat || !name) return alert("要輸入名字跟座號才能開始冒險喔！✨");
         user = { cls, seat, name };
+        startTime = Date.now();
         document.getElementById('display-name').innerText = name;
         showScreen('level-1');
         document.getElementById('user-info-bar').classList.remove('hidden');
@@ -289,7 +312,6 @@
         }
     }
 
-    // --- Level 1 邏輯 ---
     function startL1() {
         updateL1Question();
         timerId = setInterval(() => {
@@ -318,21 +340,17 @@
         const feedback = document.getElementById('l1-feedback');
         if(userAns === correct) {
             score += 5;
-            feedback.innerText = "🌟 超棒！";
+            feedback.innerText = "🌟 答對了！";
             feedback.style.color = "var(--success)";
         } else {
-            feedback.innerText = "😵 哎呀！";
+            feedback.innerText = "😵 答錯囉！";
             feedback.style.color = "var(--danger)";
         }
         document.getElementById('current-score').innerText = score;
         l1Index++;
-        setTimeout(() => {
-            feedback.innerText = "";
-            updateL1Question();
-        }, 600);
+        setTimeout(() => { feedback.innerText = ""; updateL1Question(); }, 600);
     }
 
-    // --- Level 2 邏輯 ---
     let selectedP = [];
     function toggleP(el, num) {
         el.classList.toggle('selected');
@@ -346,7 +364,7 @@
         showScreen('level-3');
     }
 
-    // --- Level 3 邏輯 (CC 配對) ---
+    // --- Level 3: 打亂順序的 CC 配對 ---
     function initCCLevel() {
         const ccData = [
             { img: "by.png", tag: "BY", n: "姓名標示" },
@@ -354,12 +372,15 @@
             { img: "by-nd.png", tag: "ND", n: "姓名標示-禁止改作" },
             { img: "by-sa.png", tag: "SA", n: "姓名標示-相同方式分享" }
         ];
+        // 洗牌演算法打亂順序
+        const shuffled = ccData.sort(() => Math.random() - 0.5);
+        
         const area = document.getElementById('cc-match-area');
-        area.innerHTML = ccData.map((d, i) => `
+        area.innerHTML = shuffled.map((d) => `
             <div class="match-row">
                 <img src="https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/${d.img}" class="cc-img">
-                <select class="cc-sel" data-idx="${i}">
-                    <option value="">選名稱...</option>
+                <select class="cc-sel" data-tag="${d.tag}">
+                    <option value="">請選擇對應名稱...</option>
                     <option value="BY">姓名標示</option>
                     <option value="NC">姓名標示-非商業性</option>
                     <option value="ND">姓名標示-禁止改作</option>
@@ -372,15 +393,14 @@
     function checkL3() {
         let correctCount = 0;
         document.querySelectorAll('.cc-sel').forEach(sel => {
-            const idx = sel.dataset.idx;
-            if(sel.value === window.atob(_E_ANS.cc[idx])) correctCount++;
+            const correctTag = sel.dataset.tag; // 圖片原本的 Tag
+            if(sel.value === correctTag) correctCount++;
         });
         score += (correctCount * 5);
         document.getElementById('current-score').innerText = score;
         showScreen('level-4');
     }
 
-    // --- Level 4 邏輯 ---
     function checkL4(choice) {
         if(choice === 3) score += 10;
         else score += 5;
@@ -388,7 +408,6 @@
         finishGame();
     }
 
-    // --- 完賽與同步 ---
     function finishGame() {
         showScreen('screen-result');
         document.getElementById('final-score-display').innerText = score;
@@ -397,12 +416,18 @@
 
     function syncToGAS() {
         const status = document.getElementById('sync-status');
-        const data = { class: user.cls, seat: user.seat, name: user.name, score: score };
-        const queryParams = new URLSearchParams(data).toString();
+        const duration = Math.floor((Date.now() - startTime) / 1000);
+        let rank = score >= 90 ? "S" : (score >= 80 ? "A" : (score >= 60 ? "B" : "C"));
+
+        const data = { 
+            class: user.cls, number: user.seat, name: user.name, 
+            score: score, time: duration, rank: rank 
+        };
         
+        const queryParams = new URLSearchParams(data).toString();
         fetch(`${GAS_URL}?${queryParams}`, { mode: 'no-cors' })
-            .then(() => { status.innerText = "✅ 成績已成功傳送到老師那邊囉！"; })
-            .catch(() => { status.innerText = "❌ 傳送失敗，請拍照給老師看分數。"; });
+            .then(() => { status.innerText = "✅ 成績已傳送到雲端紀錄表！"; })
+            .catch(() => { status.innerText = "❌ 傳送失敗，請拍照分數畫面。"; });
     }
 </script>
 </body>
