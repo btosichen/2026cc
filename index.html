@@ -48,10 +48,9 @@
 
         h1 { margin: 0; font-size: 2rem; text-shadow: 2px 2px 0px rgba(0,0,0,0.1); }
 
-        /* 影片容器 */
         .video-container {
             position: relative;
-            padding-bottom: 56.25%; /* 16:9 */
+            padding-bottom: 56.25%;
             height: 0;
             overflow: hidden;
             border-radius: 20px;
@@ -110,8 +109,6 @@
             font-size: 0.9rem;
             box-sizing: border-box;
         }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
 
         .tf-area { display: flex; justify-content: space-around; margin: 30px 0; }
         .tf-btn { 
@@ -162,7 +159,6 @@
 </div>
 
 <div class="container">
-    <!-- 0. 登入與首頁教學 -->
     <div id="screen-login" class="card">
         <h3 style="text-align: center; color: var(--secondary); margin-top: 0;">🎬 先看影片複習一下吧！</h3>
         <div class="video-container">
@@ -187,7 +183,6 @@
         </div>
     </div>
 
-    <!-- 進度條 -->
     <div id="game-progress" class="progress-container hidden">
         <div class="step" id="step-1">快問快答</div>
         <div class="step" id="step-2">四大原則</div>
@@ -195,7 +190,6 @@
         <div class="step" id="step-4">AI 爭議</div>
     </div>
 
-    <!-- Level 1: 是非快問快答 -->
     <div id="level-1" class="card hidden">
         <div style="text-align: right;"><span class="timer" id="l1-timer">60</span> 秒</div>
         <h3 id="l1-q-text" style="min-height: 80px;">載入題目中...</h3>
@@ -207,7 +201,6 @@
         <p id="l1-feedback" style="text-align:center; font-size: 1.2rem; height: 30px; font-weight: bold;"></p>
     </div>
 
-    <!-- Level 2: 四大原則判斷 -->
     <div id="level-2" class="card hidden">
         <h3 style="color: var(--primary);">📍 Level 2：合理使用四大原則</h3>
         <div style="background: #fff9e6; padding: 15px; border-radius: 15px; border-left: 6px solid var(--warning); margin-bottom: 20px;">
@@ -224,17 +217,13 @@
         <button class="btn btn-primary" onclick="checkL2()">確認判定並前進 ➔</button>
     </div>
 
-    <!-- Level 3: CC 授權配對 -->
     <div id="level-3" class="card hidden">
         <h3 style="color: var(--primary);">🧩 Level 3：標誌與名稱連連看</h3>
         <p style="font-size: 0.9rem; color: #888;">注意：題目順序每次都會變喔！</p>
-        <div id="cc-match-area">
-            <!-- 由 JS 打亂順序載入 -->
-        </div>
+        <div id="cc-match-area"></div>
         <button class="btn btn-primary" onclick="checkL3()">核對答案 ➔</button>
     </div>
 
-    <!-- Level 4: AI 風格爭議 -->
     <div id="level-4" class="card hidden">
         <h3 style="color: var(--primary);">🤖 Level 4：AI 創意爭議</h3>
         <p><strong>案例：</strong>小明叫 AI 模仿「某知名畫家」的風格畫了一堆圖，印成明信片賣錢。請問這算什麼？</p>
@@ -243,10 +232,8 @@
         <button class="btn btn-primary" style="background:#023047;" onclick="checkL4(3)">C. 需視情況：畫風雖不保護，但構圖若太像仍有侵權風險</button>
     </div>
 
-    <!-- 結算畫面 -->
     <div id="screen-result" class="card hidden" style="text-align: center;">
         <h2 style="color: var(--primary);">🎉 挑戰成功！</h2>
-        <p>恭喜探險家完成所有考驗！</p>
         <div id="final-score-display" style="font-size: 80px; font-weight: 900; color: var(--warning); text-shadow: 4px 4px 0px #ff7eb9;">0</div>
         <div id="sync-status" style="margin: 20px 0; font-weight: bold; color: var(--secondary);">正在將成績傳回總部...</div>
         <button class="btn btn-primary" onclick="location.reload()">重新挑戰</button>
@@ -257,16 +244,15 @@
     參考資料來源：<a href="https://tw.creativecommons.net/home-page/" target="_blank" style="color:var(--primary);">台灣創用 CC 資訊網</a>
 </footer>
     <footer>
-    臺北市立陽明高中國中部 陳政川老師設計
-</footer>
-
+        臺北市立陽明高中國中部 陳政川老師設計
+    </footer>
 <script>
-    // --- 加密答案與設定 ---
     const _E_ANS = {
         l1: ["dHJ1ZQ==", "ZmFsc2U=", "dHJ1ZQ==", "dHJ1ZQ==", "dHJ1ZQ==", "ZmFsc2U=", "dHJ1ZQ==", "ZmFsc2U=", "ZmFsc2U=", "dHJ1ZQ=="],
         cc: { "BY": "Qlk=", "NC": "TkM=", "ND": "TkQ=", "SA": "U0E=" }
     };
 
+    // 此處已換成您最新的 GAS URL
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzX-9l7xgkpEmadhoKOnwSRh-VC6vTUhu4ZquIOuuIE2qQgWzt1-Vchp2LraiVVLpQV/exec";
     
     let score = 0;
@@ -322,7 +308,6 @@
             document.getElementById('l1-timer').innerText = l1Timer;
             if(l1Timer <= 0) {
                 clearInterval(timerId);
-                alert("時間到囉！準備進入下一關！");
                 showScreen('level-2');
             }
         }, 1000);
@@ -367,17 +352,14 @@
         showScreen('level-3');
     }
 
-    // --- Level 3: 打亂順序的 CC 配對 ---
     function initCCLevel() {
         const ccData = [
-            { img: "by.png", tag: "BY", n: "姓名標示" },
-            { img: "by-nc.png", tag: "NC", n: "姓名標示-非商業性" },
-            { img: "by-nd.png", tag: "ND", n: "姓名標示-禁止改作" },
-            { img: "by-sa.png", tag: "SA", n: "姓名標示-相同方式分享" }
+            { img: "by.png", tag: "BY" },
+            { img: "by-nc.png", tag: "NC" },
+            { img: "by-nd.png", tag: "ND" },
+            { img: "by-sa.png", tag: "SA" }
         ];
-        // 洗牌演算法打亂順序
         const shuffled = ccData.sort(() => Math.random() - 0.5);
-        
         const area = document.getElementById('cc-match-area');
         area.innerHTML = shuffled.map((d) => `
             <div class="match-row">
@@ -396,8 +378,7 @@
     function checkL3() {
         let correctCount = 0;
         document.querySelectorAll('.cc-sel').forEach(sel => {
-            const correctTag = sel.dataset.tag; // 圖片原本的 Tag
-            if(sel.value === correctTag) correctCount++;
+            if(sel.value === sel.dataset.tag) correctCount++;
         });
         score += (correctCount * 5);
         document.getElementById('current-score').innerText = score;
@@ -422,15 +403,24 @@
         const duration = Math.floor((Date.now() - startTime) / 1000);
         let rank = score >= 90 ? "S" : (score >= 80 ? "A" : (score >= 60 ? "B" : "C"));
 
-        const data = { 
-            class: user.cls, number: user.seat, name: user.name, 
-            score: score, time: duration, rank: rank 
-        };
+        // 重要：對應 GAS 的 e.parameter 欄位名稱
+        const params = new URLSearchParams();
+        params.append("class", user.cls);
+        params.append("number", user.seat);
+        params.append("name", user.name);
+        params.append("score", score);
+        params.append("time", duration);
+        params.append("rank", rank);
+
+        const finalUrl = `${GAS_URL}?${params.toString()}`;
         
-        const queryParams = new URLSearchParams(data).toString();
-        fetch(`${GAS_URL}?${queryParams}`, { mode: 'no-cors' })
+        // 使用 no-cors 模式雖然無法讀取回傳值，但能成功將資料送達 GAS
+        fetch(finalUrl, { mode: 'no-cors' })
             .then(() => { status.innerText = "✅ 成績已傳送到雲端紀錄表！"; })
-            .catch(() => { status.innerText = "❌ 傳送失敗，請拍照分數畫面。"; });
+            .catch((e) => { 
+                console.error(e);
+                status.innerText = "❌ 傳送失敗，請拍照分數畫面。"; 
+            });
     }
 </script>
 </body>
