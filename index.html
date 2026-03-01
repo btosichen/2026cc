@@ -3,448 +3,410 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個人資料保護與著作合理使用 - 課堂教學網</title>
+    <title>著作權合理使用 - 闖關大冒險</title>
     <style>
-        /* CSS 樣式區：控制網頁外觀 */
         :root {
             --primary: #2563eb;
             --secondary: #64748b;
             --success: #16a34a;
+            --warning: #f59e0b;
             --danger: #dc2626;
-            --bg: #f8fafc;
+            --bg: #f0f4f8;
             --card: #ffffff;
         }
 
         body {
-            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+            font-family: "Microsoft JhengHei", sans-serif;
             background-color: var(--bg);
-            color: #1e293b;
             margin: 0;
             padding: 0;
-            line-height: 1.6;
+            color: #1e293b;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* 卡片設計 */
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        
         .card {
             background: var(--card);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
             padding: 30px;
             margin-bottom: 25px;
         }
 
-        /* 導覽列 */
         .header {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary), #1d4ed8);
             color: white;
-            padding: 1rem 0;
+            padding: 1.5rem 0;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
         }
 
-        /* 登入表單 */
-        .login-box {
-            max-width: 400px;
-            margin: 50px auto;
+        /* 遊戲進度條 */
+        .progress-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            padding: 5px;
         }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input, select {
-            width: 100%;
+        .step {
+            flex: 1;
+            text-align: center;
             padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            color: #94a3b8;
         }
+        .step.active { background: var(--primary); color: white; }
 
+        /* 按鈕樣式 */
         .btn {
             cursor: pointer;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             padding: 12px 24px;
             font-size: 16px;
             font-weight: bold;
-            transition: opacity 0.2s;
-            width: 100%;
+            transition: all 0.2s;
+            display: inline-block;
         }
+        .btn-primary { background: var(--primary); color: white; width: 100%; }
+        .btn-next { background: var(--success); color: white; margin-top: 20px; }
+        .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
 
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-secondary { background: var(--secondary); color: white; }
-        .btn:hover { opacity: 0.9; }
+        /* Level 1: 是非題 */
+        .tf-btn { width: 120px; height: 120px; font-size: 40px; margin: 10px; border-radius: 50%; }
 
-        /* 測驗題目 */
-        .question {
-            margin-bottom: 30px;
-            border-bottom: 1px solid #f1f5f9;
-            padding-bottom: 20px;
+        /* Level 2: 四大原則 */
+        .principle-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
         }
-
-        .options label {
-            display: block;
-            background: #f1f5f9;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: normal;
-        }
-
-        .options label:hover { background: #e2e8f0; }
-        .options input { width: auto; margin-right: 10px; }
-
-        /* 解析區塊 */
-        .explanation {
-            display: none;
-            margin-top: 10px;
+        .p-item {
+            border: 2px solid #e2e8f0;
             padding: 15px;
-            background: #f0fdf4;
-            border-left: 4px solid var(--success);
-            color: #166534;
-            border-radius: 4px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .p-item.selected { border-color: var(--primary); background: #eff6ff; }
+
+        /* Level 3: CC 配對 */
+        .cc-img { height: 40px; vertical-align: middle; margin-right: 10px; }
+        .match-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 8px;
         }
 
-        /* 表格紀錄 */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th, td {
-            text-align: left;
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        th { background: #f8fafc; }
-
+        .timer { font-size: 24px; font-weight: bold; color: var(--danger); text-align: center; }
         .hidden { display: none; }
         
-        .result-msg {
-            font-size: 1.2rem;
-            font-weight: bold;
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        /* 響應式 */
-        @media (max-width: 600px) {
-            .container { padding: 10px; }
-            .card { padding: 20px; }
-        }
+        /* 頁尾 */
+        footer { text-align: center; padding: 20px; color: var(--secondary); font-size: 14px; }
+        footer a { color: var(--primary); text-decoration: none; }
     </style>
 </head>
 <body>
 
-<div id="app">
-    <!-- 頁首 -->
-    <div id="nav-section" class="header hidden">
-        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-            <span id="user-display">學生姓名</span>
-            <div>
-                <button class="btn btn-secondary" style="padding: 5px 15px; width: auto;" onclick="showRecords()">紀錄</button>
-                <button class="btn btn-danger" style="padding: 5px 15px; width: auto;" onclick="logout()">登出</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 1. 登入畫面 -->
-    <div id="login-screen" class="container">
-        <div class="card login-box">
-            <h2 style="text-align: center; color: var(--primary);">資訊科技 課堂測驗</h2>
-            <div class="form-group">
-                <label>班級</label>
-                <select id="input-class">
-                    <option value="701">701</option>
-                    <option value="702">702</option>
-                    <option value="703">703</option>
-                    <option value="704">704</option>
-                    <option value="705">705</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>座號</label>
-                <input type="number" id="input-seat" placeholder="例如：01">
-            </div>
-            <div class="form-group">
-                <label>姓名</label>
-                <input type="text" id="input-name" placeholder="請輸入您的姓名">
-            </div>
-            <button class="btn btn-primary" onclick="login()">進入課程</button>
-            <p style="text-align: center; margin-top: 20px;">
-                <a href="javascript:void(0)" onclick="showRecords()">查看歷史紀錄</a>
-            </p>
-        </div>
-    </div>
-
-    <!-- 2. 課程內容與測驗畫面 -->
-    <div id="main-screen" class="container hidden">
-        <div class="card">
-            <h2 style="color: var(--primary);">第3節 著作合理使用</h2>
-            <p>合理使用並不是一項可以隨意主張的權利，而是必須根據具體情況、目的與影響，進行審慎判斷，才能在保障創作者權益與促進社會利用之間取得平衡。</p>
-            <div style="background: #eff6ff; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                <strong>核心概念：</strong><br>
-                為了在保障著作人權利的同時，也兼顧社會發展與公共利益，《著作權法》訂定了合理使用的範圍，回應學術、新聞、言論、行政等公益需求。
-            </div>
-            <p><strong>限制：</strong>合理使用並非任意使用，而是法律允許的「例外」。必須在不經過著作人同意下，有限度地使用。</p>
-        </div>
-
-        <div class="card">
-            <h3>📝 隨堂檢測</h3>
-            <form id="quiz-form">
-                <!-- 題目 1 -->
-                <div class="question" data-ans="3">
-                    <p><strong>1. 下列哪一項屬於「個人資料」？</strong></p>
-                    <div class="options">
-                        <label><input type="radio" name="q1" value="1"> 喜歡吃的食物種類</label>
-                        <label><input type="radio" name="q1" value="2"> 寵物的名字</label>
-                        <label><input type="radio" name="q1" value="3"> 身分證字號</label>
-                        <label><input type="radio" name="q1" value="4"> 所在的直轄市名稱</label>
-                    </div>
-                    <div class="explanation">解析：正確解答為「身分證字號」。個資法保護的是能直接或間接識別個人的資料。</div>
-                </div>
-
-                <!-- 題目 2 -->
-                <div class="question" data-ans="2">
-                    <p><strong>2. 如果個人資料被不法人士取得，最可能會發生什麼情況？</strong></p>
-                    <div class="options">
-                        <label><input type="radio" name="q2" value="1"> 獲得免費點數或優惠券</label>
-                        <label><input type="radio" name="q2" value="2"> 收到陌生的詐騙電話或簡訊</label>
-                        <label><input type="radio" name="q2" value="3"> 可以參加更多活動抽獎</label>
-                        <label><input type="radio" name="q2" value="4"> 得到更多交朋友的機會</label>
-                    </div>
-                    <div class="explanation">解析：個資外洩最常見的危害就是被用於詐騙或騷擾。</div>
-                </div>
-
-                <!-- 題目 3 -->
-                <div class="question" data-ans="1">
-                    <p><strong>3. 小明在寫報告時，引用課本圖片並註明來源，這屬於？</strong></p>
-                    <div class="options">
-                        <label><input type="radio" name="q3" value="1"> 著作合理使用</label>
-                        <label><input type="radio" name="q3" value="2"> 偷別人的創作</label>
-                        <label><input type="radio" name="q3" value="3"> 違法行為</label>
-                        <label><input type="radio" name="q3" value="4"> 侵害著作權</label>
-                    </div>
-                    <div class="explanation">解析：在教育、學術目的下適度引用並註明出處，通常符合合理使用原則。</div>
-                </div>
-
-                <!-- 題目 4 -->
-                <div class="question" data-ans="4">
-                    <p><strong>4. 下列哪一種情況「不符合」合理使用原則？</strong></p>
-                    <div class="options">
-                        <label><input type="radio" name="q4" value="1"> 引用圖片並註明出處</label>
-                        <label><input type="radio" name="q4" value="2"> 自己買的CD翻錄一份自己聽</label>
-                        <label><input type="radio" name="q4" value="3"> 教學播放影片片段討論</label>
-                        <label><input type="radio" name="q4" value="4"> 將他人文章整篇當作作業繳交</label>
-                    </div>
-                    <div class="explanation">解析：將他人文章整篇盜用屬於抄襲，嚴重侵害著作權。</div>
-                </div>
-
-                <div id="result-area" class="result-msg"></div>
-                <button type="button" id="submit-btn" class="btn btn-primary" onclick="submitQuiz()">送出測驗</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- 3. 作答紀錄畫面 -->
-    <div id="record-screen" class="container hidden">
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>📊 歷史作答紀錄</h2>
-                <button class="btn btn-secondary" style="width: auto;" onclick="goBack()">返回</button>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>班級</th>
-                        <th>座號</th>
-                        <th>姓名</th>
-                        <th>分數</th>
-                        <th>時間</th>
-                    </tr>
-                </thead>
-                <tbody id="record-table-body">
-                    <!-- 資料將由 JS 動態產生 -->
-                </tbody>
-            </table>
-            <button class="btn btn-danger" style="margin-top: 30px; background: #94a3b8;" onclick="clearHistory()">清除所有紀錄</button>
-        </div>
+<div class="header">
+    <h1>著作權合理使用冒險</h1>
+    <div id="user-info-bar" class="hidden">
+        <span id="display-name">使用者</span> | 分數: <span id="current-score">0</span>
     </div>
 </div>
 
-<script>
-    /* JavaScript 邏輯區：控制網頁互動 */
-    let currentUser = null;
+<div class="container">
+    <!-- 0. 登入畫面 -->
+    <div id="screen-login" class="card">
+        <h2 style="text-align: center;">登入挑戰</h2>
+        <div style="margin-bottom: 15px;">
+            <label>班級</label>
+            <select id="input-class">
+                <option value="701">701</option><option value="702">702</option><option value="703">703</option>
+                <option value="704">704</option><option value="705">705</option>
+            </select>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label>座號</label>
+            <input type="number" id="input-seat" placeholder="例如：01">
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label>姓名</label>
+            <input type="text" id="input-name" placeholder="請輸入您的姓名">
+        </div>
+        <button class="btn btn-primary" onclick="startGame()">開始闖關</button>
+    </div>
 
-    // 1. 登入功能
-    function login() {
+    <!-- 進度條 -->
+    <div id="game-progress" class="progress-container hidden">
+        <div class="step" id="step-1">L1: 快問快答</div>
+        <div class="step" id="step-2">L2: 四大原則</div>
+        <div class="step" id="step-3">L3: CC配對</div>
+        <div class="step" id="step-4">L4: AI爭議</div>
+    </div>
+
+    <!-- Level 1: 是非快問快答 -->
+    <div id="level-1" class="card hidden">
+        <div class="timer" id="l1-timer">60s</div>
+        <h3 id="l1-q-text">題目載入中...</h3>
+        <p>題號：<span id="l1-q-index">1</span>/10</p>
+        <div style="text-align: center;">
+            <button class="btn btn-success tf-btn" onclick="checkL1(true)">O</button>
+            <button class="btn btn-danger tf-btn" onclick="checkL1(false)">X</button>
+        </div>
+        <p id="l1-feedback" style="text-align:center; font-weight:bold;"></p>
+    </div>
+
+    <!-- Level 2: 四大原則判斷 -->
+    <div id="level-2" class="card hidden">
+        <h3>Level 2：合理使用四大原則判斷</h3>
+        <p><strong>情境：</strong>老師為了教學需要，影印了某本熱門暢銷小說的「其中一章」給全班同學當作課堂討論素材。</p>
+        <p>請點選符合本情境的描述（多選）：</p>
+        <div class="principle-box">
+            <div class="p-item" onclick="toggleP(this, 1)">① 使用目的：非營利教育目的</div>
+            <div class="p-item" onclick="toggleP(this, 2)">② 著作性質：已發表的創作性著作</div>
+            <div class="p-item" onclick="toggleP(this, 3)">③ 使用分量：僅佔全書極小部分</div>
+            <div class="p-item" onclick="toggleP(this, 4)">④ 市場影響：不影響原書銷售</div>
+        </div>
+        <button class="btn btn-next" onclick="checkL2()">判定是否合理並進入下一關</button>
+    </div>
+
+    <!-- Level 3: CC 授權配對 -->
+    <div id="level-3" class="card hidden">
+        <h3>Level 3：創用 CC 標誌配對</h3>
+        <p>請為下列標誌選擇正確的名稱：</p>
+        <div id="cc-match-area">
+            <div class="match-row">
+                <img src="https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by.png" class="cc-img">
+                <select class="cc-sel" data-ans="BY">
+                    <option value="">請選擇...</option>
+                    <option value="BY">姓名標示</option>
+                    <option value="NC">非商業性</option>
+                    <option value="ND">禁止改作</option>
+                    <option value="SA">相同方式分享</option>
+                </select>
+            </div>
+            <div class="match-row">
+                <img src="https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nc.png" class="cc-img">
+                <select class="cc-sel" data-ans="NC">
+                    <option value="">請選擇...</option>
+                    <option value="BY">姓名標示</option>
+                    <option value="NC">姓名標示-非商業性</option>
+                    <option value="ND">禁止改作</option>
+                </select>
+            </div>
+            <div class="match-row">
+                <img src="https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-nd.png" class="cc-img">
+                <select class="cc-sel" data-ans="ND">
+                    <option value="">請選擇...</option>
+                    <option value="ND">姓名標示-禁止改作</option>
+                    <option value="SA">相同方式分享</option>
+                </select>
+            </div>
+            <div class="match-row">
+                <img src="https://tw.creativecommons.net/wp-content/uploads/sites/20/2020/11/by-sa.png" class="cc-img">
+                <select class="cc-sel" data-ans="SA">
+                    <option value="">請選擇...</option>
+                    <option value="SA">姓名標示-相同方式分享</option>
+                    <option value="NC">非商業性</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn btn-next" onclick="checkL3()">核對配對</button>
+    </div>
+
+    <!-- Level 4: AI 風格爭議 -->
+    <div id="level-4" class="card hidden">
+        <h3>Level 4：AI 風格爭議模擬</h3>
+        <p><strong>案例：</strong>小明使用 AI 繪圖工具，輸入指令「模仿某知名插畫家的風格」生成了一系列圖案，並將這些圖案印成明信片在市集販售。請問這在法律與倫理上如何判斷？</p>
+        <div class="options" style="display:flex; flex-direction:column; gap:10px;">
+            <button class="btn btn-secondary" onclick="checkL4(1)">✔ 合理：風格不受著作權保護</button>
+            <button class="btn btn-secondary" onclick="checkL4(2)">❌ 侵權：完全拷貝了他人的靈魂</button>
+            <button class="btn btn-secondary" onclick="checkL4(3)">⚠ 需視情況：雖然風格不保護，但若構圖過於相似仍有風險</button>
+        </div>
+    </div>
+
+    <!-- 結算畫面 -->
+    <div id="screen-result" class="card hidden">
+        <h2 style="text-align: center; color: var(--primary);">挑戰完成！</h2>
+        <div id="final-score-display" style="font-size: 48px; text-align: center; font-weight: bold;">0</div>
+        <p style="text-align: center;" id="sync-status">資料同步中...</p>
+        <button class="btn btn-primary" onclick="location.reload()">再挑戰一次</button>
+    </div>
+</div>
+
+<footer>
+    參考資料來源：<a href="https://tw.creativecommons.net/home-page/" target="_blank">台灣創用 CC 資訊網</a>
+</footer>
+
+<script>
+    // --- 全域變數 ---
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyva0kqJmE1E1BEwwsjARpbbrRzjmdNDEndgqq0jfYXlQc1xz4L6_oj1K3ZsnbQpzd8/exec";
+    let score = 0;
+    let user = {};
+    let l1Index = 0;
+    let l1Timer = 60;
+    let timerId = null;
+
+    const l1Questions = [
+        { q: "著作權是從作品完成的那一刻起就自動產生的。", a: true },
+        { q: "只要有註明出處，就可以隨意下載整部電影分送給朋友。", a: false },
+        { q: "合理使用必須根據使用目的、著作性質、分量及市場影響來判斷。", a: true },
+        { q: "創用CC的「ND」代表禁止改作。", a: true },
+        { q: "政府公文與法律條文不受著作權保護。", a: true },
+        { q: "只要是為了作業，我可以把整本課本影印下來。", a: false },
+        { q: "創用CC中的「SA」代表相同方式分享。", a: true },
+        { q: "引用他人文章只要不超過10個字就不算侵權。", a: false },
+        { q: "公開播放買來的正版 DVD 給全校看是不需要額外授權的。", a: false },
+        { q: "將別人的詩錄音成Podcast並公開播放，需要取得授權。", a: true }
+    ];
+
+    // --- 遊戲控制 ---
+    function startGame() {
         const cls = document.getElementById('input-class').value;
         const seat = document.getElementById('input-seat').value;
         const name = document.getElementById('input-name').value;
 
-        if (!seat || !name) {
-            alert("請填寫完整的座號與姓名喔！");
+        if(!seat || !name) return alert("請填寫基本資料！");
+
+        user = { cls, seat, name };
+        document.getElementById('display-name').innerText = `${cls}班 ${seat}號 ${name}`;
+        
+        showScreen('level-1');
+        document.getElementById('user-info-bar').classList.remove('hidden');
+        document.getElementById('game-progress').classList.remove('hidden');
+        startL1();
+    }
+
+    function showScreen(id) {
+        ['screen-login', 'level-1', 'level-2', 'level-3', 'level-4', 'screen-result'].forEach(s => {
+            document.getElementById(s).classList.add('hidden');
+        });
+        document.getElementById(id).classList.remove('hidden');
+        
+        // 更新進度條
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        if(id.startsWith('level')) {
+            const num = id.split('-')[1];
+            document.getElementById(`step-${num}`).classList.add('active');
+        }
+    }
+
+    // --- Level 1 邏輯 ---
+    function startL1() {
+        l1Index = 0;
+        l1Timer = 60;
+        updateL1Question();
+        timerId = setInterval(() => {
+            l1Timer--;
+            document.getElementById('l1-timer').innerText = l1Timer + 's';
+            if(l1Timer <= 0) {
+                clearInterval(timerId);
+                alert("時間到！進入下一關");
+                showScreen('level-2');
+            }
+        }, 1000);
+    }
+
+    function updateL1Question() {
+        if(l1Index >= l1Questions.length) {
+            clearInterval(timerId);
+            setTimeout(() => showScreen('level-2'), 1000);
             return;
         }
-
-        currentUser = { cls, seat, name };
-        document.getElementById('user-display').innerText = `${cls} 班 ${seat} 號 ${name}`;
-        
-        // 切換畫面
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('nav-section').classList.remove('hidden');
-        document.getElementById('main-screen').classList.remove('hidden');
-        document.getElementById('record-screen').classList.add('hidden');
-        
-        resetQuiz();
+        document.getElementById('l1-q-text').innerText = l1Questions[l1Index].q;
+        document.getElementById('l1-q-index').innerText = (l1Index + 1);
     }
 
-    // 2. 登出
-    function logout() {
-        currentUser = null;
-        document.getElementById('login-screen').classList.remove('hidden');
-        document.getElementById('nav-section').classList.add('hidden');
-        document.getElementById('main-screen').classList.add('hidden');
-        document.getElementById('record-screen').classList.add('hidden');
-    }
-
-    // 3. 送出測驗
-    function submitQuiz() {
-        const questions = document.querySelectorAll('.question');
-        let score = 0;
-        let allAnswered = true;
-
-        questions.forEach((q, index) => {
-            const selected = q.querySelector('input:checked');
-            if (!selected) {
-                allAnswered = false;
-            }
-        });
-
-        if (!allAnswered) {
-            alert("還有題目沒寫完喔！");
-            return;
+    function checkL1(ans) {
+        if(ans === l1Questions[l1Index].a) {
+            score += 5;
+            document.getElementById('l1-feedback').innerHTML = "<span style='color:green'>正確！+5分</span>";
+        } else {
+            document.getElementById('l1-feedback').innerHTML = "<span style='color:red'>答錯了！</span>";
         }
-
-        // 批改
-        questions.forEach((q) => {
-            const selected = q.querySelector('input:checked');
-            const correctAns = q.getAttribute('data-ans');
-            const explanation = q.querySelector('.explanation');
-            
-            explanation.style.display = 'block'; // 顯示解析
-            
-            if (selected.value === correctAns) {
-                score += 25;
-                selected.parentElement.style.background = "#dcfce7";
-                selected.parentElement.style.color = "#166534";
-            } else {
-                selected.parentElement.style.background = "#fee2e2";
-                selected.parentElement.style.color = "#991b1b";
-                // 標示正確答案
-                q.querySelector(`input[value="${correctAns}"]`).parentElement.style.border = "2px solid #16a34a";
-            }
-            
-            // 停用選項避免重複更改
-            q.querySelectorAll('input').forEach(input => input.disabled = true);
-        });
-
-        document.getElementById('result-area').innerText = `測驗完成！你的得分是：${score} 分`;
-        document.getElementById('submit-btn').classList.add('hidden');
-
-        // 儲存至本地記憶體 (LocalStorage)
-        saveToLocalStorage(score);
+        document.getElementById('current-score').innerText = score;
+        l1Index++;
+        setTimeout(() => {
+            document.getElementById('l1-feedback').innerText = "";
+            updateL1Question();
+        }, 500);
     }
 
-    // 4. 重置測驗
-    function resetQuiz() {
-        document.getElementById('quiz-form').reset();
-        document.getElementById('result-area').innerText = "";
-        document.getElementById('submit-btn').classList.remove('hidden');
-        document.querySelectorAll('.explanation').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.options label').forEach(el => {
-            el.style.background = "";
-            el.style.color = "";
-            el.style.border = "";
-        });
-        document.querySelectorAll('input').forEach(input => input.disabled = false);
+    // --- Level 2 邏輯 ---
+    let selectedP = [];
+    function toggleP(el, num) {
+        el.classList.toggle('selected');
+        if(el.classList.contains('selected')) selectedP.push(num);
+        else selectedP = selectedP.filter(n => n !== num);
     }
 
-    // 5. 儲存紀錄
-    function saveToLocalStorage(score) {
-        let history = JSON.parse(localStorage.getItem('quiz_records')) || [];
-        const newRecord = {
-            cls: currentUser.cls,
-            seat: currentUser.seat,
-            name: currentUser.name,
-            score: score,
-            time: new Date().toLocaleString()
+    function checkL2() {
+        // 這題情境基本上四個原則都要考量，全選或選三個以上視為理解
+        if(selectedP.length >= 3) score += 20;
+        else score += 10;
+        document.getElementById('current-score').innerText = score;
+        showScreen('level-3');
+    }
+
+    // --- Level 3 邏輯 ---
+    function checkL3() {
+        let l3Correct = 0;
+        document.querySelectorAll('.cc-sel').forEach(sel => {
+            if(sel.value === sel.dataset.ans) l3Correct++;
+        });
+        score += (l3Correct * 5);
+        document.getElementById('current-score').innerText = score;
+        showScreen('level-4');
+    }
+
+    // --- Level 4 邏輯 ---
+    function checkL4(choice) {
+        // 選 3 是最正確的法律認知 (風險評估)
+        if(choice === 3) score += 10;
+        else score += 5;
+        
+        document.getElementById('current-score').innerText = score;
+        finishGame();
+    }
+
+    // --- 完賽與 GAS 同步 ---
+    function finishGame() {
+        showScreen('screen-result');
+        document.getElementById('final-score-display').innerText = score;
+        syncToGAS();
+    }
+
+    function syncToGAS() {
+        const status = document.getElementById('sync-status');
+        status.innerText = "資料上傳同步中...";
+
+        const data = {
+            class: user.cls,
+            seat: user.seat,
+            name: user.name,
+            score: score
         };
-        history.push(newRecord);
-        localStorage.setItem('quiz_records', JSON.stringify(history));
-    }
 
-    // 6. 顯示紀錄
-    function showRecords() {
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('main-screen').classList.add('hidden');
-        document.getElementById('record-screen').classList.remove('hidden');
-
-        const history = JSON.parse(localStorage.getItem('quiz_records')) || [];
-        const tbody = document.getElementById('record-table-body');
-        tbody.innerHTML = "";
-
-        if (history.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center'>目前尚無紀錄</td></tr>";
-        } else {
-            history.reverse().forEach(r => {
-                const row = `<tr>
-                    <td>${r.cls}</td>
-                    <td>${r.seat}</td>
-                    <td>${r.name}</td>
-                    <td style="font-weight:bold; color:var(--primary)">${r.score}</td>
-                    <td style="font-size:12px; color:gray">${r.time}</td>
-                </tr>`;
-                tbody.innerHTML += row;
+        // 使用 JSONP 或一般 fetch (視 GAS 設定而定，通常 GAS 需要用 post 或 get)
+        // 這裡採用最通用的 GET 傳遞 (注意：GAS 的 doGet 需處理參數)
+        const queryParams = new URLSearchParams(data).toString();
+        
+        fetch(`${GAS_URL}?${queryParams}`, { mode: 'no-cors' })
+            .then(() => {
+                status.innerText = "✅ 同步成功！老師已收到您的成績。";
+            })
+            .catch(err => {
+                status.innerText = "❌ 同步失敗，請截圖成績畫面給老師。";
+                console.error(err);
             });
-        }
-    }
-
-    // 7. 返回
-    function goBack() {
-        if (currentUser) {
-            document.getElementById('main-screen').classList.remove('hidden');
-            document.getElementById('record-screen').classList.add('hidden');
-        } else {
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('record-screen').classList.add('hidden');
-        }
-    }
-
-    // 8. 清除紀錄
-    function clearHistory() {
-        if (confirm("確定要刪除這台電腦上的所有作答紀錄嗎？")) {
-            localStorage.removeItem('quiz_records');
-            showRecords();
-        }
     }
 </script>
 
